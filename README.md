@@ -9,6 +9,7 @@ Note:
 1. It uses the vivaldi browser instead of chrome/chromium.
 2. The system where this code was developed is a linux system, hence all file links are like what you will find in most linux systems.
 3. The code can be tweaked to scrape any novel but this implementation scrapes specifically ATG (you know it if you know it)
+4. Why are two web browsers being used? Wuxiaworld has a chapter limit of 10 for anonymous 'guest readers'. That would mean after you navigate 10 chapters in that site, you're getting a pop-up, so my implementation; after a certain iteration count has been reached, resets the count and just simply randomly chooses a webdriver. This might not have been required as you can also simply restart the browser, but I felt like implementing it...so I did... ;).
 
 Setting up:
 1. Make sure you have geckodriver and chromedriver installed, put both of them in a file called `/opt/webdriver/bin/`. Hence, if you install these drivers, the path to these executables will look like `/opt/webdriver/bin/geckodriver` and `/opt/webdriver/bin/chromedriver`.
@@ -24,6 +25,7 @@ Webdriver:
 
 Things to add:
 1. (A thing you could add yourself too:) Make the code stop after a certain number of chapter count has been reached. For this repos' implementation, you can simply check what the value of `CH_NO` is after every iteration of our infinite loop.
+2. Maybe an addblocker? But then I would have to download and install it every time my browser runs (I think), so I need a method to keep my 
 
 
 Issues:
