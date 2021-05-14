@@ -37,6 +37,7 @@ Things to add:
 Issues:
 1. The opens and closes after every 9 iterations, this takes some cpu, I would want the browser to not close but do something that restarts the session or something...basically, I would want the code to be a tad bit gentler on the hardware.
 ![lel](https://user-images.githubusercontent.com/57110219/118249460-14789000-b4c3-11eb-8828-a25ea9cf72cc.png)
+2. After a few hundred chapters, there seems to be a new line added in the output text files, that line is "This chapter's teaser" (something like this). That line, when I checked in the browser, is actually a hypertext to well...that chapter's teaser. This isn't a huge issue, and this thing can later be removed when I create the necessary modeules to work with that raw text.
 
 If you find any issues then feel free to raise them.
 
