@@ -35,13 +35,17 @@ A web scraper for scraping wuxiaworld, written in python, using selenium and bot
 
 
 **Issues:**
-1. The opens and closes after every 9 iterations, this takes some cpu, I would want the browser to not close but do something that restarts the session or something...basically, I would want the code to be a tad bit gentler on the hardware.
+1. ~~The opens and closes after every 9 iterations, this takes some cpu, I would want the browser to not close but do something that restarts the session or something...basically, I would want the code to be a tad bit gentler on the hardware.~~ Using **Fix (1)** I was able to bring this down. This issue will be removed soon. Maybe I will first raise an issue and then remove this line.
 ![lel](https://user-images.githubusercontent.com/57110219/118249460-14789000-b4c3-11eb-8828-a25ea9cf72cc.png)
+
+**The new resource usage graphs after implementation of Fix (1)**
+![lel](https://user-images.githubusercontent.com/57110219/118322330-95b04100-b51c-11eb-8039-acd05ec250cf.png)
+
+
 2. After a few hundred chapters, there seems to be a new line added in the output text files, that line is "This chapter's teaser" (something like this). That line, when I checked in the browser, is actually a hypertext to well...that chapter's teaser. This isn't a huge issue, and this thing can later be removed when I create the necessary modeules to work with that raw text.
 
 **Fixes** (Talks about a few fixes and ideas that could potentially be the way future scripts are going to act according to):
-1. Rather than accessing wuxiaworld as a guest reader, we could simply register for an account (it's free to register) and *then* start the scraping process, this extinguishes the need to restart the browser after every 9-10 iterations.
-What's more, this also makes it easier to install addons (such as adblock or privacy badger) and to *keep* them. Yup, this fix should work as long as the requests are timed reasonably.
+1. ~~Rather than accessing wuxiaworld as a guest reader, we could simply register for an account (it's free to register) and *then* start the scraping process, this extinguishes the need to restart the browser after every 9-10 iterations. What's more, this also makes it easier to install addons (such as adblock or privacy badger) and to *keep* them. Yup, this fix should work as long as the requests are timed reasonably.~~ This has been implemented in the local repo of the code. First I need to turn it into a package, and then I'll add that fix in the next version of the package.
 
 If you find any issues then feel free to raise them.
 
