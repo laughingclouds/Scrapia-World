@@ -7,7 +7,7 @@ from env_db import *
 # hardcoding geckodrivers location programmatically is much easier...shrugs...they should've written this at the top...
 
 def return_driver(name: str='FOX'):
-    """This will return us a Firefox WebDriver object by default.\nUse for re-instantiating the `driver` object
+    """This will return us a Firefox WebDriver object by default.\nUse for re-instantiating the `driver` object.
     If `name` is given and not equal to `FOX`, a Chrome webdriver object will be returned."""
     if name != 'FOX':
         options = Options()
