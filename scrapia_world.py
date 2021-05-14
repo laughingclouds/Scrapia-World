@@ -12,7 +12,7 @@ def return_driver(name: str='FOX'):
     if name != 'FOX':
         options = Options()
         options.add_argument("start-maximized")
-        options.binary_location = "/opt/vivaldi/vivaldi"
+        options.binary_location = "/opt/vivaldi/vivaldi"        # This is where the binary for vivaldi was in my pc
         return Chrome(executable_path=EXECUTABLE_PATH_CHROME, options=options)
     return Firefox(executable_path=EXECUTABLE_PATH_GECKO)
 
