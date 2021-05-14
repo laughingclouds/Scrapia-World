@@ -1,6 +1,10 @@
 # Scrapia-World
 A web scraper for scraping wuxiaworld, written in python, using selenium and both gecko and chrome drivers.
 
+Current capability and a few thoughts:
+1. I wanted to read the novel, that's it. And that's what this script helps me with. Therefore, I made it to scrape only two things from a page. The page title, and the relevant text. The title of the page is what will become the name of the text file associated with that page, and the relevant text will be stored in that text file. Hence, it scrapes the raw text of a chapter.
+2. I plan to make new stuff that would deal with that raw text. I could've downloaded the whole page source and made a script to edit that, but I didn't feel the need to do so.
+
 DON'T BE AN IDIOT:
 1. If this is your first time webscraping (like me), then please, don't be an idiot (read as some other word that fits this context) when you scrape. What this simply means is don't mess with the `sleep()` function and the time limit I've set in it. You could at most make it 24-28 seconds. But any less and you're going to a danger zone. Those guys will ban your IP if you're acting too rowdy.
 2. Although many suggest 10-15 seconds as an appropiate gap between requests, I don't want to take any risks and be IP banned by one of my most favorite sites.
@@ -27,6 +31,7 @@ Things to add:
 1. (A thing you could add yourself too:) Make the code stop after a certain number of chapter count has been reached. For this repos' implementation, you can simply check what the value of `CH_NO` is after every iteration of our infinite loop.
 2. Maybe an addblocker? But then I would have to download and install it every time my browser runs (I think), so I need a method to keep my 
 3. Maybe make the presentation in this readme better? (I don't quite know how to beautify .md's...I'm lazy...this is a cry for help...please raise an issue or whatever is required if you'd like to help me format this readme in a better way. Thanks in advance!)
+4. Add a way to work with the output (the chapter text files).
 
 
 Issues:
