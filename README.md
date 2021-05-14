@@ -35,4 +35,8 @@ Things to add:
 
 
 Issues:
-1. None...so far, please raise them if you find any.
+1. The opens and closes after every 9 iterations, this takes some cpu, I would want the browser to not close but do something that restarts the session or something...basically, I would want the code to be a tad bit gentler on the hardware.
+![lel](https://user-images.githubusercontent.com/57110219/118249460-14789000-b4c3-11eb-8828-a25ea9cf72cc.png)
+
+If you find any issues then feel free to raise them.
+
