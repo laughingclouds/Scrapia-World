@@ -1,3 +1,5 @@
+# .env file will 'not' be ignored, reason is written below(besides the comment '# .env')
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -102,7 +104,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+# .env  ---cuz' of the way I've written my code, it'd meaningless if I ignored this.
 .venv
 env/
 venv/
