@@ -1,6 +1,7 @@
 """This has both the environment variables that are to be used by our code
 and also the different functions for working with the database."""
 from os import environ      # for loading all the env vars in the global namespace
+import subprocess
 import mysql.connector      # for working with the database
 
 
@@ -10,18 +11,18 @@ mydb = mysql.connector.connect(
     database="wuxiaworld",
     password=environ['PASSWORD']
 )
+
 cursor = mydb.cursor(dictionary=True)
-
-
 # initialising all the required global variables
 EXECUTABLE_PATH_GECKO: str = environ['EXECUTABLE_PATH_GECKO']
 EXECUTABLE_PATH_CHROME: str = environ['EXECUTABLE_PATH_CHROME']
-FOX_EXT_BASE_PATH: str = environ['FOX_EXT_BASE_PATH']
 BASE_URL: str = environ['BASE_URL']
 NOVEL_BASE_PATH: str = environ['NOVEL_BASE_PATH']
 LATEST_CH_NO: int = int(environ['LATEST_CH_NO'])
 CH_NO: int = 0
 
+# For choosing a browser
+BROWSER_NAME_LIST = ['FOX'] * 3 + [''] * 2
 
 cursor.execute("SELECT * FROM last_chapter;")
 for row in cursor:
