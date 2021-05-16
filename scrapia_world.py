@@ -67,7 +67,6 @@ try:
         # optional, you could add a line to stop execution when a certain `CH_NO` has been scraped.
 
     print("All present chapters scraped...\nEnding...")
-    end_cleanly()
 except KeyboardInterrupt:
     # end_cleanly()
     pass
@@ -76,3 +75,5 @@ except Exception as e:
     print(e)
     # end_cleanly()
     pass
+finally:
+    end_cleanly()
