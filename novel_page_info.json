@@ -1,0 +1,35 @@
+{
+    "novel_page_info": {
+        "ATG": {
+            "CHAPTER_NO_SUF": " – ",
+            "CHAPTER_NO_PRE": "Chapter ",
+            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/against-the-gods/atg-chapter-0",
+            "LATEST_CH_NO": "1811",
+            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/ATG/"
+        },
+
+        "LOAR": {
+            "CHAPTER_NO_SUF": ": ",
+            "CHAPTER_NO_PRE": "Chapter ",
+            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/lord-of-all-realms/chapter-1-an-unstable-situation",
+            "LATEST_CH_NO": "1823",
+            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Programming/newScrapiaWorld/novel/LOAR/"
+        }
+    },
+
+    "sql_info": {
+        "DATABASE": "wuxiaworld",
+        "TABLE": "novel"
+    },
+
+    "drivers_and_extensions": {
+        "EXECUTABLE_PATH_GECKO": "/opt/WebDriver/bin/geckodriver",
+        "EXECUTABLE_PATH_CHROME": "/opt/WebDriver/bin/chromedriver",
+        "FOX_EXT_BASE_PATH": "/opt/WebDriver/fox_ext/"
+    },
+
+    "login_info": {
+        "EMAIL": "<your email>",
+        "PASSWORD": "<your pswd"
+    }
+}
