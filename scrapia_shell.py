@@ -3,7 +3,7 @@
 4) Sometimes `panels` in the `novel page` have different names for different novels, for them, create a json file for
     storing what kind of a panel they have. For that save it as "str type" and "int type" or simply hardcode that stuff...
 5) Try to get the chapter no. from the current page, if it works, that should be the new value
-    of `BH_NO`. Why? We want to be consistent with exactly exceeding chapters being scraped and this will help in that.
+    of `CH_NO`. Why? We want to be consistent with exactly exceeding chapters being scraped and this will help in that.
 """
 # scrapia_world = Scrape wuxia world...
 from os import environ
