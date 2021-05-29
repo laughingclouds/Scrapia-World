@@ -16,35 +16,36 @@ A web scraper for scraping wuxiaworld, written in python, using selenium and bot
 4. Why are two web browsers being used? Wuxiaworld has a chapter limit of 10 for anonymous 'guest readers'. That would mean after you navigate 10 chapters in that site, you're getting a pop-up, so my implementation; after a certain iteration count has been reached, resets the count and just simply randomly chooses a webdriver. This might not have been required as you can also simply restart the browser, but I felt like implementing it...so I did... ;).
 
 **Setting up:**
-1. Make sure you have geckodriver and chromedriver installed, put both of them in a file called `/opt/webdriver/bin/`. Hence, if you install these drivers, the path to these executables will look like `/opt/webdriver/bin/geckodriver` and `/opt/webdriver/bin/chromedriver`.
-2. Version of chrome driver for `Vivaldi 3.8.2259.40` to be used is `Chrome 90`. How do I know this? I installed the chromedriver of the latest chrome version and I got an error message saying that my chrome version was Chrome 90.x.y.z (But I don't have chrome! So that was actually the chrome version associated to vivaldi 3.8...hopefully I'm correct...the code works though.)
-3. Because of the way I've written my code, the '.env' file is required. The variable names in it are quite self-explanatory, but I might add some small info on them later on.
-4. You need a database!!: I used mysql(unfortunately that's all I know) to keep track of a variable called `LAST_CH_NO`, this is what will help the scraper to automatically start scraping from where it left off(if you decide to stop execution).
-5. For the other stuff, I'll add in a requirements.txt which you can `pip install -r requirements.txt` within a virtual environment.
+1. Latest releases of scrapia-world use only firefox as the earlier requirement of using vivaldi as well has been made void due to a few improvements. Open `novel_page_info.json` and make changes to the different paths in accordance to your wishes. I assure you the latest release won't break because of any hotch potch in the paths.
+2. The `.env` file is required for storing the password to the database. You can eazily make changes in the code (remove the `load_dotenv` function call) to use any other method to use virtual environments. The `email` and `password` for logging in should not be moved though. If they are, please make necessary changes in the source code (in the class `InteractiveShell` in `scrapia_shell.py`).
+3. You need a database!!: Significant changes have been made in later releases in the way the database is used (or structured). For now here's how things should be:
+  1. Set the value of `DATABASE` in `novel_page_info.json` and create a database with that name.
+  2. Set the value of `TABLE` in `novel_page_info.json` and create a table with that name.
+  3. This is how the table structure should be:
+  `abreviated_novel_name1` | `abreviated_novel_name2` | `abreviated_novel_name3` | ...
+  `chapter no.` | `chapter no.` | `chapter no.` | ...
 
-**Webdriver:**
-1. For using Vivaldi, use chromedriver
-2. For using Firefox, use geckodriver...reason? Go check the selenium documentation, I can't explain each and every thing in this repo.
+  It is recommended to set the default value of every column to the integer value of the first chapter number of a novel.
+  
+4. For the other stuff, I'll add in a requirements.txt which you can `pip install -r requirements.txt` within a virtual environment.
+
+**Webdrivers:**
+Browser | Recommended Driver
+------- | ------------------
+Vivaldi | [chromedriver](https://chromedriver.chromium.org/downloads)
+Chromium | [chromedriver](https://chromedriver.chromium.org/downloads)
+Firefox | [geckodriver](https://github.com/mozilla/geckodriver/releases)
+1. You will need to link to vivaldi's binary file instead of chromes' to use it. This [stackoverflow question](https://stackoverflow.com/questions/59644818/how-to-initiate-a-chromium-based-vivaldi-browser-session-using-selenium-and-pyth) might help you out. For me binary's path was `/opt/vivaldi/vivaldi` (I use linux btw)
+2. There's another problem with vivaldi, you might not have installed the correct version of chromedriver for *your* version of vivaldi. Look out for any error messages in the terminal, they will tell you what chromium version your vivaldi is using. You can then install the driver specific to that version of chromium and it'll work.
+3. If you use linux and want to work with vivaldi, you can just copy the code from the [v0.1.0-alpha](https://github.com/r3a10god/Scrapia-World/blob/v0.1.0-alpha/scrapia_world.py) release.
+4. Using the drivers for chromium and firefox should be easy.
 
 
 **Things to add:**
-1. (A thing you could add yourself too:) Make the code stop after a certain number of chapter count has been reached. For this repos' implementation, you can simply check what the value of `CH_NO` is after every iteration of our infinite loop.
-2. Maybe an addblocker? But then I would have to download and install it every time my browser runs (I think), so I need a method to the addon or extension in my cache and install it from there. Or, much better, find some method to keep the addon installed in my selenium browser.
-3. Maybe make the presentation in this readme better? (I don't quite know how to beautify .md's...I'm lazy...this is a cry for help...please raise an issue or whatever is required if you'd like to help me format this readme in a better way. Thanks in advance!)
-4. Add a way to work with the output (the chapter text files).
+1. I have taken to adding a docstring at the top of the source files, might not be a good practise...but meh...I'll see what I can do later on.
 
 
 **Issues:**
-- [x] The opens and closes after every 9 iterations, this takes some cpu, I would want the browser to not close but do something that restarts the session or something...basically, I would want the code to be a tad bit gentler on the hardware.
-![lel](https://user-images.githubusercontent.com/57110219/118249460-14789000-b4c3-11eb-8828-a25ea9cf72cc.png)
-
-  The new releases improve this greatly. We simply log in as a registered use (you can register for free).
-![New-image](https://user-images.githubusercontent.com/57110219/118488820-c1f4d900-b739-11eb-8cb3-7672b036dd19.png)
-- [ ] After a few hundred chapters, there seems to be a new line added in the output text files, that line is "This chapter's teaser" (something like this). That line, when I checked in the browser, is actually a hypertext to well...that chapter's teaser. This isn't a huge issue, and this thing can later be removed when I create the necessary modeules to work with that raw text.
-
-**Fixes** (Talks about a few fixes and ideas that could potentially be the way future scripts are going to act according to):
-- [x] Rather than accessing wuxiaworld as a guest reader, we could simply register for an account (it's free to register) and *then* start the scraping process, this extinguishes the need to restart the browser after every 9-10 iterations.
-What's more, this also makes it easier to install addons (such as adblock or privacy badger) and to *keep* them. Yup, this fix should work as long as the requests are timed reasonably.
-
-If you find any issues then feel free to raise them.
+1. You can track any known issues from the [issues tab] (https://github.com/r3a10god/Scrapia-World/issues).
+2. If you find any issues then feel free to raise them.
 
