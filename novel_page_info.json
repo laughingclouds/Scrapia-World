@@ -14,6 +14,15 @@
             "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/lord-of-all-realms/chapter-1-an-unstable-situation",
             "LATEST_CH_NO": "1823",
             "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Programming/newScrapiaWorld/novel/LOAR/"
+        },
+
+        "OG": {
+            "CHAPTER_NO_SUF": "",
+            "CHAPTER_NO_PRE": "Chapter ",
+            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/overgeared/og-chapter-1",
+            "LATEST_CH_NO": "1432",
+            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/OG/",
+            "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/overgeared"
         }
     },
 

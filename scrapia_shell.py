@@ -3,35 +3,41 @@
 4) Sometimes `panels` in the `novel page` have different names for different novels, for them, create a json file for
     storing what kind of a panel they have. For that save it as "str type" and "int type" or simply hardcode that stuff...
 5) Try to get the chapter no. from the current page, if it works, that should be the new value
-    of `CH_NO`. Why? We want to be consistent with exactly exceeding chapters being scraped and this will help in that.
+    of `BH_NO`. Why? We want to be consistent with exactly exceeding chapters being scraped and this will help in that.
 """
 # scrapia_world = Scrape wuxia world...
-from os import environ
-from json import load
-from time import sleep      # for timeouts, cuz' you don't wanna get your IP banned...
 import cmd
+import threading
+from json import load
+from os import environ
+from sys import exit
+from time import \
+    sleep  # for timeouts, cuz' you don't wanna get your IP banned...
 
-from selenium.common import exceptions
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver import Firefox
-from selenium.webdriver.remote.webelement import WebElement     # for type hinting
-
-from mysql.connector.cursor import MySQLCursor
-from termcolor import colored
 import click
 import colorama
 import mysql.connector
-
+from mysql.connector.cursor import MySQLCursor
+from selenium.common import exceptions
+from selenium.webdriver import Firefox
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webelement import WebElement  # for type hinting
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from termcolor import colored
 
 colorama.init()
 
+
 class ScrapiaShell(cmd.Cmd):
     """Shell for scraping...duh..."""
-    def __init__(self, novel_name: str):
+    # ctx will be used in the class that overrides this one
+    def __init__(self, novel_name: str, ctx):
         cmd.Cmd.__init__(self)
+        self.SCRAPER_THREAD = threading.Thread(target=self.__start_scraping)
+        self.SCRAPER_THREAD.daemon = True  # using sys.exit will now kill this thread.
+        self.ctx = ctx
         self.__NOVEL = novel_name
         self.is_ready: bool = False     # To make sure certain functions run only after `setup` is invoked
 
@@ -48,7 +54,7 @@ class ScrapiaShell(cmd.Cmd):
             self.__DATABASE: str = novel_page_dict['sql_info']['DATABASE']
 
         #  These will be used later on
-        self.__CH_NO: int = 0
+        self.CH_NO: int = 0
         self.__CHAPTER_NO_SUF = self.__NOVEL_PAGE_INFO['CHAPTER_NO_SUF']
         self.__CHAPTER_NO_PRE = self.__NOVEL_PAGE_INFO['CHAPTER_NO_PRE']
         self.__EMAIL = self.__LOGIN_INFO['EMAIL']
@@ -64,14 +70,14 @@ class ScrapiaShell(cmd.Cmd):
             password=environ['PASSWORD']
         )
         self.__cursor: MySQLCursor = self.__mydb.cursor(dictionary=True)
-        self.__cursor.execute(f"SELECT * FROM {self.__TABLE};")
+        self.__cursor.execute(f"SELECT {self.__NOVEL} FROM {self.__TABLE};")
         for row in self.__cursor:
-            self.__CH_NO = row[self.__NOVEL]
+            self.CH_NO = row[self.__NOVEL]
 
         self.__driver = Firefox(executable_path=self.__EXECUTABLE_PATH_GECKO)
 
+        self.prompt = colored(f"({self.__NOVEL}) ", 'red')
     intro = colored("Hi! Enter `help` for...well...help...", 'green')
-    prompt = colored("(scrapia) ", 'red')
 
     def __goto_next_page(self) -> None:
         """Does one simple task, and that is, it clicks on the button, that will take us to
@@ -90,10 +96,10 @@ class ScrapiaShell(cmd.Cmd):
         `commit` is to be set to `True` only when the script is about to close selenium."""
 
         if commit:
-            self.__cursor.execute(f"UPDATE {self.__TABLE} SET {self.__NOVEL} = {self.__CH_NO};")
+            self.__cursor.execute(f"UPDATE {self.__TABLE} SET {self.__NOVEL} = {self.CH_NO};")
             self.__mydb.commit()
             return None
-        self.__CH_NO += 1
+        self.CH_NO += 1
 
     def __install_addon_clean_tabs_get_login_window(self) -> None:
         """Big name...ikr, this will first install an addon (`ghostery ad blocker`), then also go to the login window
@@ -128,7 +134,7 @@ class ScrapiaShell(cmd.Cmd):
     def __invoke_scrape_sleep_goto_next_page(self) -> None:
         """This function invokes all these three functions"""
         self.do_scrape()
-        sleep(180)       # DO NOT DELETE!!! Unless...you want to be seen as a bot and blocked?
+        sleep(115)       # DO NOT DELETE!!! Unless...you want to be seen as a bot and blocked?
         self.__goto_next_page()
 
     # For god's sake, don't push the json to github...
@@ -145,11 +151,62 @@ class ScrapiaShell(cmd.Cmd):
         inputElement.send_keys(self.__PASSWORD)
         inputElement.send_keys(Keys.ENTER)
         sleep(3)
-        self.__driver.get("https://www.wuxiaworld.com/novel/against-the-gods")
+        self.__driver.get(self.__NOVEL_PAGE_INFO['NOVEL_PAGE']) # goto whatever novel whas entered
+
+    def __start_scraping(self) -> None:
+        """Helper function that will be invoked by `self.do_start_scraping` in a thread.
+        This is the target function of `self.SCRAPER_THREAD` object."""
+        try:
+            if not self.is_ready:
+                self.do_setup()
+
+            if self.do_get_chapter_number_from_url(self.__INITIAL_SCRAPE) == self.CH_NO:
+                print(f"FOUND----------CHAPTER----------{self.CH_NO}")
+                self.__driver.get(self.__INITIAL_SCRAPE)
+                sleep(5)
+                self.__invoke_scrape_sleep_goto_next_page()
+
+            while self.CH_NO <= self.__LATEST_CH_NO:
+                print("WHILE----------LOOP----------Initialized")
+                self.__invoke_scrape_sleep_goto_next_page()
+                if self.CH_NO % 5 == 0:
+                    self.__increment_ch_no(commit=True)
+                # optional, you could add a line to stop execution when a certain `CH_NO` has been scraped.
+            print("All present chapters scraped...\nEnding...")
+            self.do_end_cleanly()
+            
+        except KeyboardInterrupt:
+            self.do_end_cleanly()
+            print("KEYBOARD----------INTERRUPT----------INVOKED")
+            return None
+        except Exception as e:
+            print("----------ERROR----------")
+            print(e)
+            self.do_end_cleanly()
+            return None
+
+    def do_ch_no(self, *args) -> None:
+        """Perform operations on `self.CH_NO`"""
+        option = str(input("(show/change)? ")).strip()
+        if option == "show":
+            print(self.CH_NO)
+        elif option == "change":
+            try:
+                self.CH_NO = int(input("New value: ").strip())
+            except Exception as e:
+                print(e, "Retry with a the correct value next time.", sep='\n')
+                return None
+        else:
+            print("Aborting!")
 
     def do_cls(self, *args) -> None:
         """Clear screen using `click`"""
         click.clear()
+
+    def do_commit(self, *args) -> None:
+        """Commits the current value of `self.CH_NO` to db. You can change the value before calling this
+        using `ch_no` function"""
+        self.__increment_ch_no(commit=True)
 
     def do_curent_url(self, *args) -> None:
         try:
@@ -158,7 +215,8 @@ class ScrapiaShell(cmd.Cmd):
             click.echo(e + '\n\n' + "Try invoking `setup` first")
             return None
 
-    def do_get_chapter_number_from_url(self, url: str, *args) -> int:
+    def do_get_chapter_number_from_url(self, url: str, return_as_is: bool=False, *args) -> int:
+        """"Setting `return_as_is` to True will return the number as a string, this is used by the `end_cleanly` function."""
         if not self.is_ready:
             click.echo("Can run only after `setup` is invoked!")
             return None
@@ -174,7 +232,10 @@ class ScrapiaShell(cmd.Cmd):
                 break
             else:
                 continue
-        return int(number_as_str)
+        if return_as_is:
+            return number_as_str
+        else:
+            return int(number_as_str)
 
     def do_end_cleanly(self, *args) -> None:
         """Invokes two functions:
@@ -184,12 +245,23 @@ class ScrapiaShell(cmd.Cmd):
         \n
         Note that `end_cleanly` does 'NOT' end the program execution, it just ends the browser and commits
         to db."""
-        self.__increment_ch_no(commit=True)        # Test: use without cleaning all cookies first
+        
+        current_ch_no: str = self.do_get_chapter_number_from_url(self.__driver.current_url, return_as_is=True)
+        if current_ch_no:  # we want to save the ch_no of the chapter we are presently in
+            self.CH_NO = int(current_ch_no)
+            
+        self.__increment_ch_no(commit=True)
         self.__driver.quit()
 
     def do_exit(self, *args) -> bool:
         """Exits the interactive shell"""
-        return True
+        try:
+            self.CH_NO = int(self.do_get_chapter_number_from_url(self.__driver.current_url, return_as_is=True))
+        except ValueError:
+            pass
+        finally:
+            self.do_end_cleanly()
+            exit()      # This kills the daemon
 
     def do_is_ready(self, show: bool=False, *args) -> None:
         """This is for manually telling the shell that we have now completed `setup`."""
@@ -214,12 +286,13 @@ class ScrapiaShell(cmd.Cmd):
         self.__driver.find_element_by_partial_link_text("Chapters").click()
         # This will open only the required panel in the chapters section of ww /atg
         try:
-            if 0 <= self.__CH_NO <= 100:
+            if 0 <= self.CH_NO <= 100:
                 return None     # No need to click
             for chapter_tuple in self.__PANEL_STRUCT_DICT:
                 chapter_tuple: list[int, int] = eval(chapter_tuple)  # Yes, this is actually a list
-                if chapter_tuple[0] <= self.__CH_NO <= chapter_tuple[1]:
+                if chapter_tuple[0] <= self.CH_NO <= chapter_tuple[1]:
                     self.__driver.find_element_by_partial_link_text(self.__PANEL_STRUCT_DICT[str(chapter_tuple)]).click()
+                    # Since chapter_tuple is also a key we use it to access the value in panel_struct_dict
                     return None
         except Exception as e:
             print(e)
@@ -238,7 +311,7 @@ class ScrapiaShell(cmd.Cmd):
         """This will re-initiate everything, including the shell class."""
         option = input("THIS WILL CLOSE ANY RUNNING INSTANCES OF SELENIUM IN THIS THREAD\nCONTINUE? (y/n): ")
         if option == 'y':
-            novel_name: str = input(f"{self.prompt}Enter novel name").strip()
+            novel_name: str = input(f"{self.prompt}Enter novel name: ").strip()
             self.do_end_cleanly()
             self.__init__(novel_name)
         else:
@@ -280,8 +353,9 @@ class ScrapiaShell(cmd.Cmd):
             self.__login_key_strokes_goto_chapterpage()
 
             self.do_open_chapterhead_then_panel()
+            sleep(3)    # just wait...it's extra safe
 
-            element_to_click: str = self.__CHAPTER_NO_PRE + str(self.__CH_NO) + self.__CHAPTER_NO_SUF
+            element_to_click: str = self.__CHAPTER_NO_PRE + str(self.CH_NO) + self.__CHAPTER_NO_SUF
             self.__driver.find_element_by_partial_link_text(element_to_click).click()  # For going to the required chapter
 
             self.__driver.implicitly_wait(5)
@@ -295,34 +369,13 @@ class ScrapiaShell(cmd.Cmd):
             self.is_ready = False
         finally:
             return None
-
+    # –
+    # -
     def do_start_scraping(self, *args):
-        try:
-            if not self.is_ready:
-                self.do_setup()
-
-            if self.do_get_chapter_number_from_url(self.__INITIAL_SCRAPE) == 0:
-                print("FOUND-------CHAPTER--------zero")
-                self.__driver.get(self.__INITIAL_SCRAPE)
-                sleep(5)
-                self.__invoke_scrape_sleep_goto_next_page()
-
-            while self.__CH_NO <= self.__LATEST_CH_NO:
-                print("WHILE----------LOOP---------Initialized")
-                self.__invoke_scrape_sleep_goto_next_page()
-                # optional, you could add a line to stop execution when a certain `CH_NO` has been scraped.
-
-            print("All present chapters scraped...\nEnding...")
-            self.do_end_cleanly()
-        except KeyboardInterrupt:
-            self.do_end_cleanly()
-            pass
-        except Exception as e:
-            print("-------ERROR--------")
-            print(e)
-            self.do_end_cleanly()
-            pass
-
-
-if __name__ == "__main__":
-    ScrapiaShell('ATG').cmdloop()
+        """This will run the `self.__start_scraping` helper function in a thread. This particular function also
+        deals with any function calls that might try to `start` the same thread again."""
+        try:            
+            self.SCRAPER_THREAD.start()
+        except RuntimeError as e:
+            print(e, "The function is probably already running!", sep='\n')
+            return None
