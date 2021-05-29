@@ -19,13 +19,13 @@ A web scraper for scraping wuxiaworld, written in python, using selenium and bot
 1. Latest releases of scrapia-world use only firefox as the earlier requirement of using vivaldi as well has been made void due to a few improvements. Open `novel_page_info.json` and make changes to the different paths in accordance to your wishes. I assure you the latest release won't break because of any hotch potch in the paths.
 2. The `.env` file is required for storing the password to the database. You can eazily make changes in the code (remove the `load_dotenv` function call) to use any other method to use virtual environments. The `email` and `password` for logging in should not be moved though. If they are, please make necessary changes in the source code (in the class `InteractiveShell` in `scrapia_shell.py`).
 3. You need a database!!: Significant changes have been made in later releases in the way the database is used (or structured). For now here's how things should be:
-  1. Set the value of `DATABASE` in `novel_page_info.json` and create a database with that name.
-  2. Set the value of `TABLE` in `novel_page_info.json` and create a table with that name.
-  3. This is how the table structure should be:
-  `abreviated_novel_name1` | `abreviated_novel_name2` | `abreviated_novel_name3` | ...
-  `chapter no.` | `chapter no.` | `chapter no.` | ...
+  * Set the value of `DATABASE` in `novel_page_info.json` and create a database with that name.
+  * Set the value of `TABLE` in `novel_page_info.json` and create a table with that name.
+  * This is how the table structure should be:
+`abreviated_novel_name1` | `abreviated_novel_name2` | `abreviated_novel_name3` | ...
+`chapter no.` | `chapter no.` | `chapter no.` | ...
 
-  It is recommended to set the default value of every column to the integer value of the first chapter number of a novel.
+It is recommended to set the default value of every column to the integer value of the first chapter number of a novel.
   
 4. For the other stuff, I'll add in a requirements.txt which you can `pip install -r requirements.txt` within a virtual environment.
 
