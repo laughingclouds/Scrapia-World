@@ -216,7 +216,7 @@ class ScrapiaShell(cmd.Cmd):
         using `ch_no` function"""
         self.__increment_ch_no(commit=True)
 
-    def do_curent_url(self, *args) -> None:
+    def do_current_url(self, *args) -> None:
         try:
             click.echo(f"We are in\n{self.__driver.current_url}")
         except Exception as e:
