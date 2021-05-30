@@ -41,6 +41,15 @@
             "LATEST_CH_NO": "415",
             "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/TRK/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/tomb-raider-king"
+        },
+
+        "EYEM": {
+            "CHAPTER_NO_SUF": "",
+            "CHAPTER_NO_PRE": "Chapter ",
+            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/everyone-is-young-except-for-me/eyem-chapter-1",
+            "LATEST_CH_NO": "375",
+            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/EYEM/",
+            "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/everyone-is-young-except-for-me"   
         }
     },
 

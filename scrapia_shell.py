@@ -41,6 +41,7 @@ class ScrapiaShell(cmd.Cmd):
         self.ctx = ctx
         self.__NOVEL = novel_name
         self.is_ready: bool = False     # To make sure certain functions run only after `setup` is invoked
+        self._save_src: bool = False    # If set, we'll save as html instead.
 
         with open("novel_page_info.json", 'r') as novel_page_fobj, open("panel_struct_info.json", 'r') as panel_struct_fobj:       # Reading from the json file
             # Refer to the above json files to understand this mess
@@ -132,7 +133,7 @@ class ScrapiaShell(cmd.Cmd):
     def __invoke_scrape_sleep_goto_next_page(self) -> None:
         """This function invokes all these three functions"""
         self.do_scrape()
-        sleep(115)       # DO NOT DELETE!!! Unless...you want to be seen as a bot and blocked?
+        sleep(100)       # DO NOT DELETE!!! Unless...you want to be seen as a bot and blocked?
         self.__goto_next_page()
 
     # For god's sake, don't push the json to github...
@@ -184,7 +185,7 @@ class ScrapiaShell(cmd.Cmd):
             return None
 
     def do_ch_no(self, *args) -> None:
-        """Perform operations on `self.CH_NO`"""
+        """Perform operations on `self.CH_NO`."""
         option = str(input("(show/change)? ")).strip()
         if option == "show":
             print(self.CH_NO)
@@ -196,6 +197,15 @@ class ScrapiaShell(cmd.Cmd):
                 return None
         else:
             print("Aborting!")
+
+    def do_change_values(self, *args):
+        """Gives a menu to change values of variables that might alter the behaviour of the code."""
+        # For now work with `self._save_src` only
+        new_value = input("change to true?\n(y/n) ")
+        if new_value == 'y':
+            self._save_src = True
+        else:
+            print("Aborted!")
 
     def do_cls(self, *args) -> None:
         """Clear screen using `click`"""
@@ -234,6 +244,11 @@ class ScrapiaShell(cmd.Cmd):
             return number_as_str
         else:
             return int(number_as_str)
+
+    def do_get(self, *args):
+        """Prompts for a url and invokes `self.__driver.get(<url>)`"""
+        url: str = input("Enter url: ").strip()
+        self.__driver.get(url)
 
     def do_end_cleanly(self, *args) -> None:
         """Invokes two functions:
@@ -302,6 +317,10 @@ class ScrapiaShell(cmd.Cmd):
         except Exception as e:
             print(e, exc_info()[0], "From function: self.do_open_chapterhead_then_panel", sep='\n\n')
 
+    def do_pr_pgsrc(self, *args):
+        """Prints the page source to stdout"""
+        print(self.__driver.page_source)
+
     def do_reinitiate(self, *args) -> None:
         """Re-initiates the driver object for smoothly re-running from the terminal itself"""
         option = input("THIS WILL CLOSE ANY RUNNING INSTANCES OF SELENIUM IN THIS THREAD\nCONTINUE? (y/n): ")
@@ -332,12 +351,14 @@ class ScrapiaShell(cmd.Cmd):
         # the filename including the chapters from now on should be saved as `<last_part_of_url>.txt`
 
         URL_LAST_PART: str = self.__driver.current_url.rstrip('/').split('/')[-1]
-        # Since the code is self-explanatory, I'll describe what the variable stands for
-        # The last part of the url usually contains information on the chapter being scraped
-        # We will, from now on save the chapter text file with this part of the url as it's name
-        story_content = self.__driver.find_element_by_id('chapter-content').text
 
-        with open(self.__NOVEL_SAVE_PATH_BASE + URL_LAST_PART, 'w') as f:
+        file_ext: str = ''  # default value
+        if self._save_src:
+            file_ext = '.html'
+            story_content = self.__driver.page_source
+        else:
+            story_content = self.__driver.find_element_by_id('chapter-content').text
+        with open(self.__NOVEL_SAVE_PATH_BASE + URL_LAST_PART + file_ext, 'w') as f:
             f.write(story_content)
         self.__increment_ch_no()
 
