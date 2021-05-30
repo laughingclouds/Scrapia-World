@@ -23,6 +23,24 @@
             "LATEST_CH_NO": "1432",
             "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/OG/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/overgeared"
+        },
+
+        "7K": {
+            "CHAPTER_NO_SUF": " – ",
+            "CHAPTER_NO_PRE": "Chapter ",
+            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/7-killers/7k-chapter-7",
+            "LATEST_CH_NO": "14",
+            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/7K/",
+            "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/7-killers"
+        },
+
+        "TRK": {
+            "CHAPTER_NO_SUF": ": ",
+            "CHAPTER_NO_PRE": "Chapter ",
+            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/tomb-raider-king/trk-chapter-1",
+            "LATEST_CH_NO": "415",
+            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/TRK/",
+            "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/tomb-raider-king"
         }
     },
 

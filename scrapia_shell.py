@@ -35,6 +35,7 @@ class ScrapiaShell(cmd.Cmd):
     # ctx will be used in the class that overrides this one
     def __init__(self, novel_name: str, ctx):
         cmd.Cmd.__init__(self)
+        # self.FIRST_KEY: str = ''
         self.SCRAPER_THREAD = threading.Thread(target=self.__start_scraping)
         self.SCRAPER_THREAD.daemon = True  # using sys.exit will now kill this thread.
         self.ctx = ctx
@@ -119,9 +120,6 @@ class ScrapiaShell(cmd.Cmd):
         self.__driver.get("https://www.wuxiaworld.com/account/login")
         WebDriverWait(self.__driver, 7).until(EC.presence_of_all_elements_located((By.TAG_NAME, "form")))
         # wait for the page to load
-
-        self.__driver.implicitly_wait(20)        # please setup touch vpn within this time...hopefully it works...
-
 
         MAIN_HANDLE: str = self.__driver.current_window_handle     # Points to ww /account/login
         for window_handle in self.__driver.window_handles:
@@ -286,17 +284,20 @@ class ScrapiaShell(cmd.Cmd):
         self.__driver.find_element_by_partial_link_text("Chapters").click()
         # This will open only the required panel in the chapters section of ww /atg
         try:
-            if 0 <= self.CH_NO <= 100:
-                return None     # No need to click
+            is_first_iteration: int = 0  # cuz' the first panel is open by default
             for chapter_tuple in self.__PANEL_STRUCT_DICT:
                 chapter_tuple: list[int, int] = eval(chapter_tuple)  # Yes, this is actually a list
                 if chapter_tuple[0] <= self.CH_NO <= chapter_tuple[1]:
-                    self.__driver.find_element_by_partial_link_text(self.__PANEL_STRUCT_DICT[str(chapter_tuple)]).click()
-                    # Since chapter_tuple is also a key we use it to access the value in panel_struct_dict
-                    return None
+                    if is_first_iteration == 0:
+                        is_first_iteration += 1
+                    else:
+                        self.__driver.find_element_by_partial_link_text(self.__PANEL_STRUCT_DICT[str(chapter_tuple)]).click()
+                        return None
+                        # Since chapter_tuple is also a key we use it to access the value in panel_struct_dict
+        except exceptions.NoSuchElementException as e:
+            print(e, "From function: self.do_open_chapterhead_then_panel", sep='\n\n')
         except Exception as e:
-            print(e)
-            return None
+            print(e, "From function: self.do_open_chapterhead_then_panel", sep='\n\n')
 
     def do_reinitiate(self, *args) -> None:
         """Re-initiates the driver object for smoothly re-running from the terminal itself"""
@@ -362,12 +363,15 @@ class ScrapiaShell(cmd.Cmd):
             # This is all it does.
             # It's basically creating (or `setting up`) a scenario that makes scraping through the click method possible
         except exceptions.NoSuchElementException as e:
-            print("EXCEPTION----------------INVOKED")
-            print(e, '\n\n', "Try to invoke `start_scraping`")
+            print("EXCEPTION-----from self.do_setup")
+            print(e, "Try to invoke `start_scraping`", sep='\n\n')
         except Exception as e:
-            click.echo(e)
+            print(e, "FROM self.do_setup", sep='\n\n')
             self.is_ready = False
         finally:
+            print("The start_scraping function should be working no matter what.",
+            "If you're having trouble with this function, consider manually going to the required chapte.",
+            "And invoking `start_scraping`, it should start scraping then.\n\n")
             return None
     # –
     # -

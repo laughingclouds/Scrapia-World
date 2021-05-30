@@ -1,5 +1,10 @@
 {
+    "7K": {
+        "[1, 8]": "Table of Contents"
+    },
+
     "ATG": {
+        "[1, 100]": "Volume 1 – Red-Colored Calamity",
         "[101, 200]": "Volume 2 – Blue Wind Conspiracy",
         "[201, 300]": "Volume 3 – Name that Shakes the Profound Sky",
         "[301, 400]": "Volume 4 – Fury that Burns the Heavens",
@@ -20,6 +25,7 @@
     },
 
     "LOAR": {
+        "[1, 100]": "Chapter 1-100",
         "[101, 200]": "Chapter 101-200",
         "[201, 300]": "Chapter 201-300",
         "[301, 400]": "Chapter 301-400",
@@ -41,6 +47,7 @@
     },
 
     "OG": {
+        "[1, 50]": "Chapters 1 - 50",
         "[51, 100]": "Chapters 51 - 100",
         "[101, 150]": "Chapters 101 - 150",
         "[151, 200]": "Chapters 151 - 200",
@@ -68,6 +75,18 @@
         "[1251, 1300]": "Chapters 1251 - 1300",
         "[1301, 1350]": "Chapters 1301 - 1350",
         "[1351, 1400]": "Chapters 1351 - 1400",
-        "[1401, 1450]": "Chapters 1401 - 1450 "
+        "[1401, 1450]": "Chapters 1401 - 1450"
+    },
+    
+    "TRK": {
+        "[1, 50]": "Chapters 1 - 50",
+        "[51, 100]": "Chapters 51 - 100",
+        "[101, 150]": "Chapters 101 - 150",
+        "[151, 200]": "Chapters 151 - 200",
+        "[201, 250]": "Chapters 201 - 250",
+        "[251, 300]": "Chapters 251 - 300",
+        "[301, 350]": "Chapters 301 - 350",
+        "[351, 400]": "Chapters 351 - 400",
+        "[401, 415]": "Chapters 401 - 415 "
     }
 }
