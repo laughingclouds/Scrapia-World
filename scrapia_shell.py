@@ -10,7 +10,7 @@ import cmd
 import threading
 from json import load
 from os import environ
-from sys import exit
+from sys import exit, exc_info  
 from time import \
     sleep  # for timeouts, cuz' you don't wanna get your IP banned...
 
@@ -284,20 +284,23 @@ class ScrapiaShell(cmd.Cmd):
         self.__driver.find_element_by_partial_link_text("Chapters").click()
         # This will open only the required panel in the chapters section of ww /atg
         try:
-            is_first_iteration: int = 0  # cuz' the first panel is open by default
-            for chapter_tuple in self.__PANEL_STRUCT_DICT:
+            for index, chapter_tuple in enumerate(self.__PANEL_STRUCT_DICT):
                 chapter_tuple: list[int, int] = eval(chapter_tuple)  # Yes, this is actually a list
                 if chapter_tuple[0] <= self.CH_NO <= chapter_tuple[1]:
-                    if is_first_iteration == 0:
-                        is_first_iteration += 1
-                    else:
-                        self.__driver.find_element_by_partial_link_text(self.__PANEL_STRUCT_DICT[str(chapter_tuple)]).click()
-                        return None
-                        # Since chapter_tuple is also a key we use it to access the value in panel_struct_dict
+                    if index == 0:
+                        continue
+                    self.__driver.find_element_by_partial_link_text(self.__PANEL_STRUCT_DICT[str(chapter_tuple)]).click()
+                    # Since chapter_tuple is also a key we use it to access the value in panel_struct_dict
+                    return None
+                if index == 0:
+                    self.__driver.find_element_by_partial_link_text(self.__PANEL_STRUCT_DICT[str(chapter_tuple)]).click()
+                    print("First panel closed")
+                    # This will close the first panel
+                continue
         except exceptions.NoSuchElementException as e:
             print(e, "From function: self.do_open_chapterhead_then_panel", sep='\n\n')
         except Exception as e:
-            print(e, "From function: self.do_open_chapterhead_then_panel", sep='\n\n')
+            print(e, exc_info()[0], "From function: self.do_open_chapterhead_then_panel", sep='\n\n')
 
     def do_reinitiate(self, *args) -> None:
         """Re-initiates the driver object for smoothly re-running from the terminal itself"""
@@ -370,7 +373,7 @@ class ScrapiaShell(cmd.Cmd):
             self.is_ready = False
         finally:
             print("The start_scraping function should be working no matter what.",
-            "If you're having trouble with this function, consider manually going to the required chapte.",
+            "If you're having trouble with this function, consider manually going to the required chapter.",
             "And invoking `start_scraping`, it should start scraping then.\n\n")
             return None
     # –
