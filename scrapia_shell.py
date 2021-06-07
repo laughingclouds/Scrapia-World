@@ -19,13 +19,44 @@ import colorama
 import mysql.connector
 from mysql.connector.cursor import MySQLCursor
 from selenium.common import exceptions
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver import Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement  # for type hinting
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from termcolor import colored
+
+
+def setup_browser(exec_path: str):
+    firefox_options = Options()
+    firefox_options.headless = True
+
+    prefs: dict = {
+        'profile.managed_default_content_settings.images': 2,
+        'disk-cache-size': 4096,
+        'intl.accept_languages': 'en-US'
+    }
+
+    args = {
+        "--dns-prefetch-disable",
+        "--no-sandbox",
+    }
+
+    for pref in prefs:
+        firefox_options.set_preference(pref, prefs[pref])
+
+    for arg in args:
+        firefox_options.add_argument(arg)
+
+    capabilities = DesiredCapabilities.FIREFOX
+
+    firefox_options.set_headless
+    return Firefox(executable_path=exec_path, desired_capabilities=capabilities, options=firefox_options)
+
 
 colorama.init()
 
@@ -76,7 +107,7 @@ class ScrapiaShell(cmd.Cmd):
         for row in self.__cursor:
             self.CH_NO = row[self.__NOVEL]
 
-        self.__driver = Firefox(executable_path=self.__EXECUTABLE_PATH_GECKO)
+        self.__driver = setup_browser(self.__EXECUTABLE_PATH_GECKO)
 
         self.prompt = colored(f"({self.__NOVEL}) ", 'red')
     intro = colored("Hi! Enter `help` for...well...help...", 'green')
