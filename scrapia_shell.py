@@ -28,7 +28,7 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement  # for type hinting
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from termcolor import colored
+from utils.termcolor import colored
 
 
 def setup_browser(exec_path: str):
