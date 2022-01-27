@@ -1,0 +1,16 @@
+# For all configurations
+
+[LOGIN]
+EMAIL="email"
+PASSWORD="pass"
+
+[SQL]
+DATABASE="wuxiaworld"
+TABLE="novel"
+
+[DRIVERS]
+GECKO_EXE_PATH="path"
+CHROME_EXE_PATH="path"
+
+[EXTENSIONS]
+FOX_EXT_BASE_PATH="path"

@@ -3,11 +3,9 @@ from json import load
 from os import listdir
 
 import click
-from dotenv import load_dotenv
 
 import scrapia_shell
 
-load_dotenv()
 
 @click.group("scracli", invoke_without_command=True)
 @click.pass_context

@@ -1,4 +1,5 @@
-# .env file will 'not' be ignored, reason is written below(besides the comment '# .env')
+# So that my smart ass doesn't make my password and email public
+*.cfg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -104,7 +105,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-# .env  ---cuz' of the way I've written my code, it'd meaningless if I ignored this.
+.env
 .venv
 env/
 venv/
