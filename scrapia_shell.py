@@ -15,7 +15,7 @@ from time import \
     sleep  # for timeouts, cuz' you don't wanna get your IP banned...
 
 import click
-import colorama
+# import colorama
 import mysql.connector
 from mysql.connector.cursor import MySQLCursor
 from selenium.common import exceptions
@@ -58,7 +58,7 @@ def setup_browser(exec_path: str):
     return Firefox(executable_path=exec_path, desired_capabilities=capabilities, options=firefox_options)
 
 
-colorama.init()
+# colorama.init()
 
 
 class ScrapiaShell(cmd.Cmd):
