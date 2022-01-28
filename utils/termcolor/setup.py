@@ -32,7 +32,7 @@ def read(filename):
 
 LONG_DESC = read('README.rst') + '\nCHANGES\n=======\n\n' + read('CHANGES.rst')
 
-from termcolor import VERSION
+from .termcolor import VERSION
 
 setup(name='termcolor',
       version='.'.join([str(v) for v in VERSION]),

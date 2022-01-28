@@ -23,8 +23,8 @@
 
 """ANSII Color formatting for output in terminal."""
 
-from __future__ import print_function
-import os
+# from __future__ import print_function
+from os import getenv
 
 
 __ALL__ = [ 'colored', 'cprint' ]
@@ -99,7 +99,7 @@ def colored(text, color=None, on_color=None, attrs=None):
         colored('Hello, World!', 'red', 'on_grey', ['blue', 'blink'])
         colored('Hello, World!', 'green')
     """
-    if os.getenv('ANSI_COLORS_DISABLED') is None:
+    if getenv('ANSI_COLORS_DISABLED') is None:
         fmt_str = '\033[%dm%s'
         if color is not None:
             text = fmt_str % (COLORS[color], text)
@@ -125,7 +125,7 @@ def cprint(text, color=None, on_color=None, attrs=None, **kwargs):
 
 
 if __name__ == '__main__':
-    print('Current terminal type: %s' % os.getenv('TERM'))
+    print(f"Current terminal type: {getenv('TERM')}")
     print('Test basic colors:')
     cprint('Grey color', 'grey')
     cprint('Red color', 'red')
