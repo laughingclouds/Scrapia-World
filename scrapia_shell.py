@@ -6,16 +6,17 @@
     of `BH_NO`. Why? We want to be consistent with exactly exceeding chapters being scraped and this will help in that.
 """
 # scrapia_world = Scrape wuxia world...
-import cmd
 import threading
+from cmd import Cmd
 from json import load
-from os import environ
+from platform import system
+from configparser import ConfigParser
+# from os import environ
 from sys import exit, exc_info
 from time import \
     sleep  # for timeouts, cuz' you don't wanna get your IP banned...
 
 import click
-# import colorama
 import mysql.connector
 from mysql.connector.cursor import MySQLCursor
 from selenium.common import exceptions
@@ -28,6 +29,7 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement  # for type hinting
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+
 from utils.termcolor import colored
 
 
@@ -57,21 +59,27 @@ def setup_browser(exec_path: str):
     firefox_options.set_headless
     return Firefox(executable_path=exec_path, desired_capabilities=capabilities, options=firefox_options)
 
+# So that termcolor can work on windows
+if system() == "Windows":
+    from utils import colorama
+    colorama.init()
 
-# colorama.init()
 
-
-class ScrapiaShell(cmd.Cmd):
+class ScrapiaShell(Cmd):
     """Shell for scraping...duh..."""
     # ctx will be used in the class that overrides this one
 
     def __init__(self, novel_name: str, ctx):
-        cmd.Cmd.__init__(self)
+        Cmd.__init__(self)
+
+        cfg = ConfigParser()
+        cfg.read("config.cfg")
+        self.cfg = cfg
+        self.ctx = ctx
         # self.FIRST_KEY: str = ''
         self.SCRAPER_THREAD = threading.Thread(target=self.__start_scraping)
         # using sys.exit will now kill this thread.
         self.SCRAPER_THREAD.daemon = True
-        self.ctx = ctx
         self.__NOVEL = novel_name
         # To make sure certain functions run only after `setup` is invoked
         self.is_ready: bool = False
@@ -83,31 +91,28 @@ class ScrapiaShell(cmd.Cmd):
 
             novel_page_dict: dict = load(novel_page_fobj)
 
-            self.__PANEL_STRUCT_DICT: dict = load(
-                panel_struct_fobj)[novel_name]
-            self.__EXECUTABLE_PATH_GECKO: str = novel_page_dict[
-                'drivers_and_extensions']['EXECUTABLE_PATH_GECKO']
-            self.__LOGIN_INFO: dict[str, str] = novel_page_dict['login_info']
-            self.__NOVEL_PAGE_INFO: dict[str,
-                                         str] = novel_page_dict['novel_page_info'][novel_name]
-            self.__TABLE: str = novel_page_dict['sql_info']['TABLE']
-            self.__DATABASE: str = novel_page_dict['sql_info']['DATABASE']
+            self.__PANEL_STRUCT_DICT: dict = load(panel_struct_fobj)[novel_name]
+            self.__NOVEL_PAGE_INFO: dict[str, str] = novel_page_dict['novel_page_info'][novel_name]
+
+        self.__EXECUTABLE_PATH_GECKO: str = cfg['DRIVERS']['GECKO_EXE_PATH']            
+        self.__TABLE: str = cfg['SQL']['TABLE']
+        self.__DATABASE: str = cfg['SQL']['DATABASE']
 
         #  These will be used later on
         self.CH_NO: int = 0
         self.__CHAPTER_NO_SUF = self.__NOVEL_PAGE_INFO['CHAPTER_NO_SUF']
         self.__CHAPTER_NO_PRE = self.__NOVEL_PAGE_INFO['CHAPTER_NO_PRE']
-        self.__EMAIL = self.__LOGIN_INFO['EMAIL']
         self.__INITIAL_SCRAPE = self.__NOVEL_PAGE_INFO['INITIAL_SCRAPE']
         self.__LATEST_CH_NO = int(self.__NOVEL_PAGE_INFO['LATEST_CH_NO'])
         self.__NOVEL_SAVE_PATH_BASE = self.__NOVEL_PAGE_INFO['NOVEL_SAVE_PATH_BASE']
-        self.__PASSWORD = self.__LOGIN_INFO['PASSWORD']
+        self.__EMAIL = self.cfg['LOGIN']['EMAIL']
+        self.__PASSWORD = self.cfg['LOGIN']['PASSWORD']
 
         self.__mydb = mysql.connector.connect(
             host="localhost",
             user="root",
             database=self.__DATABASE,
-            password=environ['PASSWORD']
+            password=self.cfg['LOGIN']['PASSWORD']
         )
         self.__cursor: MySQLCursor = self.__mydb.cursor(dictionary=True)
         self.__cursor.execute(f"SELECT {self.__NOVEL} FROM {self.__TABLE};")
