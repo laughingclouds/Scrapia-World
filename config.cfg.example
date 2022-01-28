@@ -7,6 +7,7 @@ PASSWORD="pass"
 [SQL]
 DATABASE="wuxiaworld"
 TABLE="novel"
+DB_PASSWORD=""
 
 [DRIVERS]
 GECKO_EXE_PATH="path"
