@@ -11,10 +11,10 @@ from cmd import Cmd
 from json import load
 from platform import system
 from configparser import ConfigParser
+
 # from os import environ
 from sys import exit, exc_info
-from time import \
-    sleep  # for timeouts, cuz' you don't wanna get your IP banned...
+from time import sleep  # for timeouts, cuz' you don't wanna get your IP banned...
 
 import click
 import mysql.connector
@@ -38,9 +38,9 @@ def setup_browser(exec_path: str):
     firefox_options.headless = True
 
     prefs: dict = {
-        'profile.managed_default_content_settings.images': 2,
-        'disk-cache-size': 4096,
-        'intl.accept_languages': 'en-US'
+        "profile.managed_default_content_settings.images": 2,
+        "disk-cache-size": 4096,
+        "intl.accept_languages": "en-US",
     }
 
     args = {
@@ -57,16 +57,23 @@ def setup_browser(exec_path: str):
     capabilities = DesiredCapabilities.FIREFOX
 
     firefox_options.set_headless
-    return Firefox(executable_path=exec_path, desired_capabilities=capabilities, options=firefox_options)
+    return Firefox(
+        executable_path=exec_path,
+        desired_capabilities=capabilities,
+        options=firefox_options,
+    )
+
 
 # So that termcolor can work on windows
 if system() == "Windows":
     from utils import colorama
+
     colorama.init()
 
 
 class ScrapiaShell(Cmd):
     """Shell for scraping...duh..."""
+
     # ctx will be used in the class that overrides this one
 
     def __init__(self, novel_name: str, ctx):
@@ -83,36 +90,40 @@ class ScrapiaShell(Cmd):
         self.__NOVEL = novel_name
         # To make sure certain functions run only after `setup` is invoked
         self.is_ready: bool = False
-        self._save_src: bool = False    # If set, we'll save as html instead.
+        self._save_src: bool = False  # If set, we'll save as html instead.
 
         # Reading from the json file
-        with open("novel_page_info.json", 'r') as novel_page_fobj, open("panel_struct_info.json", 'r') as panel_struct_fobj:
+        with open("novel_page_info.json", "r") as novel_page_fobj, open(
+            "panel_struct_info.json", "r"
+        ) as panel_struct_fobj:
             # Refer to the above json files to understand this mess
 
             novel_page_dict: dict = load(novel_page_fobj)
 
             self.__PANEL_STRUCT_DICT: dict = load(panel_struct_fobj)[novel_name]
-            self.__NOVEL_PAGE_INFO: dict[str, str] = novel_page_dict['novel_page_info'][novel_name]
+            self.__NOVEL_PAGE_INFO: dict[str, str] = novel_page_dict["novel_page_info"][
+                novel_name
+            ]
 
-        self.__EXECUTABLE_PATH_GECKO: str = cfg['DRIVERS']['GECKO_EXE_PATH']            
-        self.__TABLE: str = cfg['SQL']['TABLE']
-        self.__DATABASE: str = cfg['SQL']['DATABASE']
+        self.__EXECUTABLE_PATH_GECKO: str = cfg["DRIVERS"]["GECKO_EXE_PATH"]
+        self.__TABLE: str = cfg["SQL"]["TABLE"]
+        self.__DATABASE: str = cfg["SQL"]["DATABASE"]
 
         #  These will be used later on
         self.CH_NO: int = 0
-        self.__CHAPTER_NO_SUF = self.__NOVEL_PAGE_INFO['CHAPTER_NO_SUF']
-        self.__CHAPTER_NO_PRE = self.__NOVEL_PAGE_INFO['CHAPTER_NO_PRE']
-        self.__INITIAL_SCRAPE = self.__NOVEL_PAGE_INFO['INITIAL_SCRAPE']
-        self.__LATEST_CH_NO = int(self.__NOVEL_PAGE_INFO['LATEST_CH_NO'])
-        self.__NOVEL_SAVE_PATH_BASE = self.__NOVEL_PAGE_INFO['NOVEL_SAVE_PATH_BASE']
-        self.__EMAIL = self.cfg['LOGIN']['EMAIL']
-        self.__PASSWORD = self.cfg['LOGIN']['PASSWORD']
+        self.__CHAPTER_NO_SUF = self.__NOVEL_PAGE_INFO["CHAPTER_NO_SUF"]
+        self.__CHAPTER_NO_PRE = self.__NOVEL_PAGE_INFO["CHAPTER_NO_PRE"]
+        self.__INITIAL_SCRAPE = self.__NOVEL_PAGE_INFO["INITIAL_SCRAPE"]
+        self.__LATEST_CH_NO = int(self.__NOVEL_PAGE_INFO["LATEST_CH_NO"])
+        self.__NOVEL_SAVE_PATH_BASE = self.__NOVEL_PAGE_INFO["NOVEL_SAVE_PATH_BASE"]
+        self.__EMAIL = self.cfg["LOGIN"]["EMAIL"]
+        self.__PASSWORD = self.cfg["LOGIN"]["PASSWORD"]
 
         self.__mydb = mysql.connector.connect(
             host="localhost",
             user="root",
             database=self.__DATABASE,
-            password=self.cfg['SQL']['DB_PASSWORD']
+            password=self.cfg["SQL"]["DB_PASSWORD"],
         )
         self.__cursor: MySQLCursor = self.__mydb.cursor(dictionary=True)
         self.__cursor.execute(f"SELECT {self.__NOVEL} FROM {self.__TABLE};")
@@ -121,19 +132,18 @@ class ScrapiaShell(Cmd):
 
         self.__driver = setup_browser(self.__EXECUTABLE_PATH_GECKO)
 
-        self.prompt = colored(f"({self.__NOVEL}) ", 'red')
-    intro = colored("Hi! Enter `help` for...well...help...", 'green')
+        self.prompt = colored(f"({self.__NOVEL}) ", "red")
+
+    intro = colored("Hi! Enter `help` for...well...help...", "green")
 
     def __goto_next_page(self) -> None:
         """Does one simple task, and that is, it clicks on the button, that will take us to
         the next page or to the next chapter."""
 
-        element: WebElement = self.__driver.find_element_by_class_name(
-            "top-bar-area")
-        elements = element.find_elements_by_xpath(
-            ".//a")       # Returns a list of elements
+        element: WebElement = self.__driver.find_element_by_class_name("top-bar-area")
+        elements = element.find_elements_by_xpath(".//a")  # Returns a list of elements
 
-        elements[2].click()     # This clicks the `next button`
+        elements[2].click()  # This clicks the `next button`
 
     def __increment_ch_no(self, commit: bool = False) -> None:
         """This function `by default`, will only increment `CH_NO` by 1.\n
@@ -144,7 +154,8 @@ class ScrapiaShell(Cmd):
 
         if commit:
             self.__cursor.execute(
-                f"UPDATE {self.__TABLE} SET {self.__NOVEL} = {self.CH_NO};")
+                f"UPDATE {self.__TABLE} SET {self.__NOVEL} = {self.CH_NO};"
+            )
             self.__mydb.commit()
             return None
         self.CH_NO += 1
@@ -163,12 +174,15 @@ class ScrapiaShell(Cmd):
         # driver.install_addon('/opt/WebDriver/fox_ext/touch_vpn_secure_vpn_proxy_for_unlimited_access-4.2.1-fx.xpi')
         # Don't need the vpn if we're gonna go with the click implementation
         self.__driver.install_addon(
-            '/opt/WebDriver/fox_ext/ghostery_privacy_ad_blocker-8.5.5-an+fx.xpi')
+            "/opt/WebDriver/fox_ext/ghostery_privacy_ad_blocker-8.5.5-an+fx.xpi"
+        )
         self.__driver.install_addon(
-            '/opt/WebDriver/fox_ext/privacy_badger-2021.2.2-an+fx.xpi')
+            "/opt/WebDriver/fox_ext/privacy_badger-2021.2.2-an+fx.xpi"
+        )
         self.__driver.get("https://www.wuxiaworld.com/account/login")
         WebDriverWait(self.__driver, 7).until(
-            EC.presence_of_all_elements_located((By.TAG_NAME, "form")))
+            EC.presence_of_all_elements_located((By.TAG_NAME, "form"))
+        )
         # wait for the page to load
 
         # Points to ww /account/login
@@ -197,14 +211,14 @@ class ScrapiaShell(Cmd):
         Extra import requirements:\n
         `from selenium.webdriver.common.keys import Keys`"""
 
-        inputElement = self.__driver.find_element_by_id('Email')
+        inputElement = self.__driver.find_element_by_id("Email")
         inputElement.send_keys(self.__EMAIL)
-        inputElement = self.__driver.find_element_by_id('Password')
+        inputElement = self.__driver.find_element_by_id("Password")
         inputElement.send_keys(self.__PASSWORD)
         inputElement.send_keys(Keys.ENTER)
         sleep(3)
         # goto whatever novel whas entered
-        self.__driver.get(self.__NOVEL_PAGE_INFO['NOVEL_PAGE'])
+        self.__driver.get(self.__NOVEL_PAGE_INFO["NOVEL_PAGE"])
 
     def __start_scraping(self) -> None:
         """Helper function that will be invoked by `self.do_start_scraping` in a thread.
@@ -247,7 +261,7 @@ class ScrapiaShell(Cmd):
             try:
                 self.CH_NO = int(input("New value: ").strip())
             except Exception as e:
-                print(e, "Retry with a the correct value next time.", sep='\n')
+                print(e, "Retry with a the correct value next time.", sep="\n")
                 return None
         else:
             print("Aborting!")
@@ -256,7 +270,7 @@ class ScrapiaShell(Cmd):
         """Gives a menu to change values of variables that might alter the behaviour of the code."""
         # For now work with `self._save_src` only
         new_value = input("change to true?\n(y/n) ")
-        if new_value == 'y':
+        if new_value == "y":
             self._save_src = True
         else:
             print("Aborted!")
@@ -274,24 +288,26 @@ class ScrapiaShell(Cmd):
         try:
             click.echo(f"We are in\n{self.__driver.current_url}")
         except Exception as e:
-            click.echo(e + '\n\n' + "Try invoking `setup` first")
+            click.echo(e + "\n\n" + "Try invoking `setup` first")
             return None
 
-    def do_get_chapter_number_from_url(self, url: str, return_as_is: bool = False, *args) -> int:
-        """"Setting `return_as_is` to True will return the number as a string, this is used by the `end_cleanly` function."""
+    def do_get_chapter_number_from_url(
+        self, url: str, return_as_is: bool = False, *args
+    ) -> int:
+        """ "Setting `return_as_is` to True will return the number as a string, this is used by the `end_cleanly` function."""
         if not self.is_ready:
             click.echo("Can run only after `setup` is invoked!")
             return None
 
         # This returns only the relevant part (the part with the chapter no)
-        url = url.rstrip('/').split('/')[-1]
-        number_as_str: str = ''
+        url = url.rstrip("/").split("/")[-1]
+        number_as_str: str = ""
         was_prev_element_digit: bool = False
         for element in url:
             if element.isdigit():
                 number_as_str += element
                 was_prev_element_digit = True
-            elif not(element.isdigit()) and was_prev_element_digit:
+            elif not (element.isdigit()) and was_prev_element_digit:
                 break
             else:
                 continue
@@ -315,8 +331,11 @@ class ScrapiaShell(Cmd):
         to db."""
 
         current_ch_no: str = self.do_get_chapter_number_from_url(
-            self.__driver.current_url, return_as_is=True)
-        if current_ch_no:  # we want to save the ch_no of the chapter we are presently in
+            self.__driver.current_url, return_as_is=True
+        )
+        if (
+            current_ch_no
+        ):  # we want to save the ch_no of the chapter we are presently in
             self.CH_NO = int(current_ch_no)
 
         self.__increment_ch_no(commit=True)
@@ -325,13 +344,16 @@ class ScrapiaShell(Cmd):
     def do_exit(self, *args) -> bool:
         """Exits the interactive shell"""
         try:
-            self.CH_NO = int(self.do_get_chapter_number_from_url(
-                self.__driver.current_url, return_as_is=True))
+            self.CH_NO = int(
+                self.do_get_chapter_number_from_url(
+                    self.__driver.current_url, return_as_is=True
+                )
+            )
         except ValueError:
             pass
         finally:
             self.do_end_cleanly()
-            exit()      # This kills the daemon
+            exit()  # This kills the daemon
 
     def do_is_ready(self, show: bool = False, *args) -> None:
         """This is for manually telling the shell that we have now completed `setup`."""
@@ -358,25 +380,32 @@ class ScrapiaShell(Cmd):
         try:
             for index, chapter_tuple in enumerate(self.__PANEL_STRUCT_DICT):
                 chapter_tuple: list[int, int] = eval(
-                    chapter_tuple)  # Yes, this is actually a list
+                    chapter_tuple
+                )  # Yes, this is actually a list
                 if chapter_tuple[0] <= self.CH_NO <= chapter_tuple[1]:
                     if index == 0:
                         continue
                     self.__driver.find_element_by_partial_link_text(
-                        self.__PANEL_STRUCT_DICT[str(chapter_tuple)]).click()
+                        self.__PANEL_STRUCT_DICT[str(chapter_tuple)]
+                    ).click()
                     # Since chapter_tuple is also a key we use it to access the value in panel_struct_dict
                     return None
                 if index == 0:
                     self.__driver.find_element_by_partial_link_text(
-                        self.__PANEL_STRUCT_DICT[str(chapter_tuple)]).click()
+                        self.__PANEL_STRUCT_DICT[str(chapter_tuple)]
+                    ).click()
                     print("First panel closed")
                     # This will close the first panel
                 continue
         except exceptions.NoSuchElementException as e:
-            print(e, "From function: self.do_open_chapterhead_then_panel", sep='\n\n')
+            print(e, "From function: self.do_open_chapterhead_then_panel", sep="\n\n")
         except Exception as e:
-            print(e, exc_info()[
-                  0], "From function: self.do_open_chapterhead_then_panel", sep='\n\n')
+            print(
+                e,
+                exc_info()[0],
+                "From function: self.do_open_chapterhead_then_panel",
+                sep="\n\n",
+            )
 
     def do_pr_pgsrc(self, *args):
         """Prints the page source to stdout"""
@@ -385,19 +414,20 @@ class ScrapiaShell(Cmd):
     def do_reinitiate(self, *args) -> None:
         """Re-initiates the driver object for smoothly re-running from the terminal itself"""
         option = input(
-            "THIS WILL CLOSE ANY RUNNING INSTANCES OF SELENIUM IN THIS THREAD\nCONTINUE? (y/n): ")
-        if option == 'y':
+            "THIS WILL CLOSE ANY RUNNING INSTANCES OF SELENIUM IN THIS THREAD\nCONTINUE? (y/n): "
+        )
+        if option == "y":
             self.do_end_cleanly()
-            self.__driver = Firefox(
-                executable_path=self.__EXECUTABLE_PATH_GECKO)
+            self.__driver = Firefox(executable_path=self.__EXECUTABLE_PATH_GECKO)
         else:
             return None
 
     def do_reinitiate_everything(self, *args) -> None:
         """This will re-initiate everything, including the shell class."""
         option = input(
-            "THIS WILL CLOSE ANY RUNNING INSTANCES OF SELENIUM IN THIS THREAD\nCONTINUE? (y/n): ")
-        if option == 'y':
+            "THIS WILL CLOSE ANY RUNNING INSTANCES OF SELENIUM IN THIS THREAD\nCONTINUE? (y/n): "
+        )
+        if option == "y":
             novel_name: str = input(f"{self.prompt}Enter novel name: ").strip()
             self.do_end_cleanly()
             self.__init__(novel_name)
@@ -414,17 +444,15 @@ class ScrapiaShell(Cmd):
             return None
         # the filename including the chapters from now on should be saved as `<last_part_of_url>.txt`
 
-        URL_LAST_PART: str = self.__driver.current_url.rstrip(
-            '/').split('/')[-1]
+        URL_LAST_PART: str = self.__driver.current_url.rstrip("/").split("/")[-1]
 
-        file_ext: str = ''  # default value
+        file_ext: str = ""  # default value
         if self._save_src:
-            file_ext = '.html'
+            file_ext = ".html"
             story_content = self.__driver.page_source
         else:
-            story_content = self.__driver.find_element_by_id(
-                'chapter-content').text
-        with open(self.__NOVEL_SAVE_PATH_BASE + URL_LAST_PART + file_ext, 'w') as f:
+            story_content = self.__driver.find_element_by_id("chapter-content").text
+        with open(self.__NOVEL_SAVE_PATH_BASE + URL_LAST_PART + file_ext, "w") as f:
             f.write(story_content)
         self.__increment_ch_no()
 
@@ -444,27 +472,32 @@ class ScrapiaShell(Cmd):
             self.__login_key_strokes_goto_chapterpage()
 
             self.do_open_chapterhead_then_panel()
-            sleep(3)    # just wait...it's extra safe
+            sleep(3)  # just wait...it's extra safe
 
-            element_to_click: str = self.__CHAPTER_NO_PRE + \
-                str(self.CH_NO) + self.__CHAPTER_NO_SUF
+            element_to_click: str = (
+                self.__CHAPTER_NO_PRE + str(self.CH_NO) + self.__CHAPTER_NO_SUF
+            )
             self.__driver.find_element_by_partial_link_text(
-                element_to_click).click()  # For going to the required chapter
+                element_to_click
+            ).click()  # For going to the required chapter
 
             self.__driver.implicitly_wait(5)
             # This is all it does.
             # It's basically creating (or `setting up`) a scenario that makes scraping through the click method possible
         except exceptions.NoSuchElementException as e:
             print("EXCEPTION-----from self.do_setup")
-            print(e, "Try to invoke `start_scraping`", sep='\n\n')
+            print(e, "Try to invoke `start_scraping`", sep="\n\n")
         except Exception as e:
-            print(e, "FROM self.do_setup", sep='\n\n')
+            print(e, "FROM self.do_setup", sep="\n\n")
             self.is_ready = False
         finally:
-            print("The start_scraping function should be working no matter what.",
-                  "If you're having trouble with this function, consider manually going to the required chapter.",
-                  "And invoking `start_scraping`, it should start scraping then.\n\n")
+            print(
+                "The start_scraping function should be working no matter what.",
+                "If you're having trouble with this function, consider manually going to the required chapter.",
+                "And invoking `start_scraping`, it should start scraping then.\n\n",
+            )
             return None
+
     # –
     # -
 
@@ -474,5 +507,5 @@ class ScrapiaShell(Cmd):
         try:
             self.SCRAPER_THREAD.start()
         except RuntimeError as e:
-            print(e, "The function is probably already running!", sep='\n')
+            print(e, "The function is probably already running!", sep="\n")
             return None
