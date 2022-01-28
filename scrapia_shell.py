@@ -112,7 +112,7 @@ class ScrapiaShell(Cmd):
             host="localhost",
             user="root",
             database=self.__DATABASE,
-            password=self.cfg['LOGIN']['PASSWORD']
+            password=self.cfg['SQL']['DB_PASSWORD']
         )
         self.__cursor: MySQLCursor = self.__mydb.cursor(dictionary=True)
         self.__cursor.execute(f"SELECT {self.__NOVEL} FROM {self.__TABLE};")
