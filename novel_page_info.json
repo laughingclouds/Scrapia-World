@@ -51,21 +51,5 @@
             "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/EYEM/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/everyone-is-young-except-for-me"   
         }
-    },
-
-    "sql_info": {
-        "DATABASE": "wuxiaworld",
-        "TABLE": "novel"
-    },
-
-    "drivers_and_extensions": {
-        "EXECUTABLE_PATH_GECKO": "/opt/WebDriver/bin/geckodriver",
-        "EXECUTABLE_PATH_CHROME": "/opt/WebDriver/bin/chromedriver",
-        "FOX_EXT_BASE_PATH": "/opt/WebDriver/fox_ext/"
-    },
-
-    "login_info": {
-        "EMAIL": "<your email>",
-        "PASSWORD": "<your pswd"
     }
 }
