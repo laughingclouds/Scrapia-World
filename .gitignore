@@ -1,5 +1,7 @@
 # So that my smart ass doesn't make my password and email public
 *.cfg
+# sqlite database related files
+DB/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
