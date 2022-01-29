@@ -23,6 +23,13 @@ Something like this:
 
 
 It is recommended to set the default value of every column to the integer value of the first chapter number of a novel.
+
+```sql
+CREATE TABLE "novel" (
+	"ATG"	INTEGER DEFAULT 0,
+	"OG"	INTEGER DEFAULT 0
+);
+```
   
 4. For the other stuff, I'll add in a requirements.txt which you can `pip install -r requirements.txt` within a virtual environment.
 
