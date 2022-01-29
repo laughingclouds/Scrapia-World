@@ -1,7 +1,11 @@
 # So that my smart ass doesn't make my password and email public
 *.cfg
 # sqlite database related files
-DB/
+utils/db/wuxiaworld*
+# WebDriver stuff
+WebDriver/bin/chromedriver
+WebDriver/bin/geckodriver
+WebDriver/exts/fox/*.xpi
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
