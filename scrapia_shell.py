@@ -4,45 +4,45 @@
     storing what kind of a panel they have. For that save it as "str type" and "int type" or simply hardcode that stuff...
 5) Try to get the chapter no. from the current page, if it works, that should be the new value
     of `BH_NO`. Why? We want to be consistent with exactly exceeding chapters being scraped and this will help in that.
+6) We might be able to sucessfully port to sqlite. And we probably won't need a password to connect to the DB.
+    TODO: Make the code connect to the (sqlite) DB
+    TODO: Remove DB password requirement
+    TODO: Maybe put the code to create the DB in /DB, or maybe shift DB to utils
 """
 # scrapia_world = Scrape wuxia world...
 import threading
 from cmd import Cmd
+from sys import exit, exc_info
 from json import load
+from time import sleep  # for timeouts, cuz' you don't wanna get your IP banned...
 from platform import system
 from configparser import ConfigParser
 
-# from os import environ
-from sys import exit, exc_info
-from time import sleep  # for timeouts, cuz' you don't wanna get your IP banned...
-
 import click
-import mysql.connector
-from mysql.connector.cursor import MySQLCursor
 from selenium.common import exceptions
-from selenium.webdriver.firefox.options import Options
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver import Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement  # for type hinting
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from utils.termcolor import colored
+from utils.db import getChapterNumber, getConAndCur
 
 
 def setup_browser(exec_path: str):
     firefox_options = Options()
     firefox_options.headless = True
 
-    prefs: dict = {
+    prefs = {
         "profile.managed_default_content_settings.images": 2,
         "disk-cache-size": 4096,
         "intl.accept_languages": "en-US",
     }
-
     args = {
         "--dns-prefetch-disable",
         "--no-sandbox",
@@ -50,7 +50,6 @@ def setup_browser(exec_path: str):
 
     for pref in prefs:
         firefox_options.set_preference(pref, prefs[pref])
-
     for arg in args:
         firefox_options.add_argument(arg)
 
@@ -119,16 +118,13 @@ class ScrapiaShell(Cmd):
         self.__EMAIL = self.cfg["LOGIN"]["EMAIL"]
         self.__PASSWORD = self.cfg["LOGIN"]["PASSWORD"]
 
-        self.__mydb = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            database=self.__DATABASE,
-            password=self.cfg["SQL"]["DB_PASSWORD"],
+        # self.__mydb = sqlite3.connect(f"utils/DB/{self.__DATABASE}")
+        # self.__mydb.row_factory = sqlite3.Row
+        # self.__cursor = self.__mydb.cursor()      # delete later, after checking if it works
+        self.__mydb, self.__cursor = getConAndCur(self.__DATABASE)
+        self.CH_NO = getChapterNumber(
+            self.__mydb, self.__cursor, self.__TABLE, self.__NOVEL
         )
-        self.__cursor: MySQLCursor = self.__mydb.cursor(dictionary=True)
-        self.__cursor.execute(f"SELECT {self.__NOVEL} FROM {self.__TABLE};")
-        for row in self.__cursor:
-            self.CH_NO = row[self.__NOVEL]
 
         self.__driver = setup_browser(self.__EXECUTABLE_PATH_GECKO)
 
@@ -153,11 +149,11 @@ class ScrapiaShell(Cmd):
         `commit` is to be set to `True` only when the script is about to close selenium."""
 
         if commit:
-            self.__cursor.execute(
-                f"UPDATE {self.__TABLE} SET {self.__NOVEL} = {self.CH_NO};"
-            )
-            self.__mydb.commit()
-            return None
+            with self.__mydb:
+                self.__cursor.execute(
+                    f"UPDATE {self.__TABLE} SET {self.__NOVEL}={self.CH_NO};"
+                )
+            return
         self.CH_NO += 1
 
     def __install_addon_clean_tabs_get_login_window(self) -> None:
@@ -174,10 +170,10 @@ class ScrapiaShell(Cmd):
         # driver.install_addon('/opt/WebDriver/fox_ext/touch_vpn_secure_vpn_proxy_for_unlimited_access-4.2.1-fx.xpi')
         # Don't need the vpn if we're gonna go with the click implementation
         self.__driver.install_addon(
-            "/opt/WebDriver/fox_ext/ghostery_privacy_ad_blocker-8.5.5-an+fx.xpi"
+            f"{self.cfg['EXTENSIONS']['FOX_EXT_BASE_PATH']}/{self.cfg['EXTENSIONS']['GHOSTERY']}"
         )
         self.__driver.install_addon(
-            "/opt/WebDriver/fox_ext/privacy_badger-2021.2.2-an+fx.xpi"
+            f"{self.cfg['EXTENSIONS']['FOX_EXT_BASE_PATH']}/{self.cfg['EXTENSIONS']['PRIVACY_BADGER']}"
         )
         self.__driver.get("https://www.wuxiaworld.com/account/login")
         WebDriverWait(self.__driver, 7).until(
