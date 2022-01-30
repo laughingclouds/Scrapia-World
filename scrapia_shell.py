@@ -15,7 +15,7 @@ from cmd import Cmd
 from sys import exit, exc_info
 from json import load
 from time import sleep  # for timeouts, cuz' you don't wanna get your IP banned...
-from platform import system
+from platform import system as returnOSName
 from configparser import ConfigParser
 
 import click
@@ -64,7 +64,7 @@ def setup_browser(exec_path: str):
 
 
 # So that termcolor can work on windows
-if system() == "Windows":
+if returnOSName() == "Windows":
     from utils import colorama
 
     colorama.init()
