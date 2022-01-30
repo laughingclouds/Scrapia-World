@@ -36,9 +36,9 @@ from utils.termcolor import colored
 from utils.db import getChapterNumber, getConAndCur
 
 
-def setup_browser(exec_path: str):
+def setup_browser(exec_path: str, isHeadless: bool=True):
     firefox_options: Options = Options()
-    firefox_options.headless = True
+    firefox_options.headless = isHeadless
 
     prefs = {
         "profile.managed_default_content_settings.images": 2,
@@ -77,7 +77,7 @@ class ScrapiaShell(Cmd):
 
     # ctx will be used in the class that overrides this one
 
-    def __init__(self, novel_name: str, ctx):
+    def __init__(self, isHeadless: int, novel_name: str, ctx):
         Cmd.__init__(self)
 
         cfg = ConfigParser()
@@ -124,7 +124,7 @@ class ScrapiaShell(Cmd):
             self.__mydb, self.__cursor, self.__TABLE, self.__NOVEL
         )
 
-        self.__driver = setup_browser(self.__EXECUTABLE_PATH_GECKO)
+        self.__driver = setup_browser(self.__EXECUTABLE_PATH_GECKO, isHeadless)
 
         self.prompt = colored(f"({self.__NOVEL}) ", "red")
 
@@ -158,11 +158,6 @@ class ScrapiaShell(Cmd):
         """Big name...ikr, this will first install an addon (`ghostery ad blocker`), then also go to the login window
         of wuxiaworld. After sleeping for 7 seconds the code will then begin to close any unwanted tabs (closes any tabs that are not `MAIN_HANDLE`)
         and also return focus to the login window.
-
-        Extra import requirements:\n
-        `from selenium.webdriver.common.by import By`\n
-        `from selenium.webdriver.support.ui import WebDriverWait`\n
-        `from selenium.webdriver.support import expected_conditions as EC`
         """
         
         self.__driver.install_addon(
@@ -171,22 +166,34 @@ class ScrapiaShell(Cmd):
         self.__driver.install_addon(
             f"{self.cfg['EXTENSIONS']['FOX_EXT_BASE_PATH']}/{self.cfg['EXTENSIONS']['PRIVACY_BADGER']}"
         )
-        self.__driver.get("https://www.wuxiaworld.com/account/login")
+        self.__driver.get(self.cfg['LOGIN']['LOGIN_FROM'])
         WebDriverWait(self.__driver, 7).until(
-            EC.presence_of_all_elements_located((By.TAG_NAME, "form"))
+            EC.presence_of_all_elements_located((By.TAG_NAME, "main"))
         )
         # wait for the page to load
 
-        # Points to ww /account/login
+        # Points to ww login-page
         MAIN_HANDLE: str = self.__driver.current_window_handle
         for window_handle in self.__driver.window_handles:
             if window_handle != MAIN_HANDLE:
                 self.__driver.switch_to.window(window_handle)
                 # after closing all irrelevant tabs driver will focus back to the main one
                 self.__driver.close()
-        # Puts focus back on ww /account/login
+        # Puts focus back on ww login-page
         self.__driver.switch_to.window(MAIN_HANDLE)
         # Use this stuff to setup the login window (You don't want any junk in some new tab)
+        sleep(2)
+        # click the first button on the page, it will make login button visible
+        js = """document.getElementsByTagName("button")[0].click();
+                let btnList = document.getElementsByTagName("button");
+
+                for (let btn of btnList) {
+                if (btn.innerText.toLowerCase() == "log in") {
+                    btn.click();
+                    }
+                }
+            """
+        self.__driver.execute_script(js)
 
     def __invoke_scrape_sleep_goto_next_page(self) -> None:
         """This function invokes all these three functions"""
@@ -202,14 +209,13 @@ class ScrapiaShell(Cmd):
 
         Extra import requirements:\n
         `from selenium.webdriver.common.keys import Keys`"""
-
-        inputElement = self.__driver.find_element_by_id("Email")
+        inputElement = self.__driver.find_element_by_id("Username")
         inputElement.send_keys(self.__EMAIL)
         inputElement = self.__driver.find_element_by_id("Password")
         inputElement.send_keys(self.__PASSWORD)
         inputElement.send_keys(Keys.ENTER)
         sleep(3)
-        # goto whatever novel whas entered
+        # goto novel-page of whatever novel has been choosen
         self.__driver.get(self.__NOVEL_PAGE_INFO["NOVEL_PAGE"])
 
     def __start_scraping(self) -> None:
@@ -443,7 +449,7 @@ class ScrapiaShell(Cmd):
 
         URL_LAST_PART: str = self.__driver.current_url.rstrip("/").split("/")[-1]
 
-        file_ext: str = ""  # default value
+        file_ext: str = ".txt"  # default value
         if self._save_src:
             file_ext = ".html"
             story_content = self.__driver.page_source
@@ -465,7 +471,7 @@ class ScrapiaShell(Cmd):
             self.is_ready = True
             self.__install_addon_clean_tabs_get_login_window()
 
-            sleep(5)
+            sleep(5)            
             self.__login_key_strokes_goto_chapterpage()
 
             self.do_open_chapterhead_then_panel()
@@ -493,7 +499,7 @@ class ScrapiaShell(Cmd):
                 "If you're having trouble with this function, consider manually going to the required chapter.",
                 "And invoking `start_scraping`, it should start scraping then.\n\n",
             )
-            return None
+            return
 
     # –
     # -
