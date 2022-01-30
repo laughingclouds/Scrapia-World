@@ -1,8 +1,10 @@
 from cmd import Cmd
 from json import load
-from os import listdir
+from os import system as systemCmd, listdir
+from tkinter import EXCEPTION
 
 import click
+from click._compat import WIN
 
 import scrapia_shell
 
@@ -110,8 +112,15 @@ def check(novel_name: str, latest_chapter: bool=False, list_all_chapters: bool=F
 
 @cli.command()
 def cls():
-    """click implementation of bash command `clear`"""
-    click.clear()
+    """clear screen"""
+    try: 
+        if WIN:
+            systemCmd("cls")
+        else:
+            systemCmd("clear")
+    except EXCEPTION:
+        click.clear()
+
 
 
 @cli.command()
@@ -126,6 +135,7 @@ def greet(n, name):
 @click.argument("novel_name")
 @click.pass_context
 def shell(ctx, novel_name: str):
+    """Start a scraping session in a shell"""
     safe: str = "You are safe to go if you're in the terminal."
     option = input(f"Warning, invoking this within the shell will restart it.{safe}\nContinue? (y/n): ")
     if option == 'y':
