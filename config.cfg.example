@@ -4,6 +4,7 @@
 [LOGIN]
 EMAIL=email
 PASSWORD=pass
+LOGIN_FROM=https://www.wuxiaworld.com/
 
 [SQL]
 DATABASE=wuxiaworld

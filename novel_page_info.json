@@ -5,7 +5,8 @@
             "CHAPTER_NO_PRE": "Chapter ",
             "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/against-the-gods/atg-chapter-0",
             "LATEST_CH_NO": "1926",
-            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/ATG/"
+            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/ATG/",
+            "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/against-the-gods"
         },
 
         "LOAR": {
@@ -13,7 +14,8 @@
             "CHAPTER_NO_PRE": "Chapter ",
             "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/lord-of-all-realms/chapter-1-an-unstable-situation",
             "LATEST_CH_NO": "1823",
-            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Programming/newScrapiaWorld/novel/LOAR/"
+            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Programming/newScrapiaWorld/novel/LOAR/",
+            "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/lord-of-all-realms"
         },
 
         "OG": {
