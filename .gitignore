@@ -6,6 +6,9 @@ utils/db/wuxiaworld*
 WebDriver/bin/chromedriver
 WebDriver/bin/geckodriver
 WebDriver/exts/fox/*.xpi
+# novel
+novel/*
+!novel/novel_readme.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

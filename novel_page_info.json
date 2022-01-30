@@ -1,10 +1,10 @@
 {
     "novel_page_info": {
         "ATG": {
-            "CHAPTER_NO_SUF": " – ",
+            "CHAPTER_NO_SUF": " - ",
             "CHAPTER_NO_PRE": "Chapter ",
             "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/against-the-gods/atg-chapter-0",
-            "LATEST_CH_NO": "1811",
+            "LATEST_CH_NO": "1926",
             "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/ATG/"
         },
 

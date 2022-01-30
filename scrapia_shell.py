@@ -118,10 +118,7 @@ class ScrapiaShell(Cmd):
         self.__NOVEL_SAVE_PATH_BASE = self.__NOVEL_PAGE_INFO["NOVEL_SAVE_PATH_BASE"]
         self.__EMAIL = self.cfg["LOGIN"]["EMAIL"]
         self.__PASSWORD = self.cfg["LOGIN"]["PASSWORD"]
-
-        # self.__mydb = sqlite3.connect(f"utils/DB/{self.__DATABASE}")
-        # self.__mydb.row_factory = sqlite3.Row
-        # self.__cursor = self.__mydb.cursor()      # delete later, after checking if it works
+        
         self.__mydb, self.__cursor = getConAndCur(self.__DATABASE)
         self.CH_NO = getChapterNumber(
             self.__mydb, self.__cursor, self.__TABLE, self.__NOVEL
@@ -167,9 +164,7 @@ class ScrapiaShell(Cmd):
         `from selenium.webdriver.support.ui import WebDriverWait`\n
         `from selenium.webdriver.support import expected_conditions as EC`
         """
-
-        # driver.install_addon('/opt/WebDriver/fox_ext/touch_vpn_secure_vpn_proxy_for_unlimited_access-4.2.1-fx.xpi')
-        # Don't need the vpn if we're gonna go with the click implementation
+        
         self.__driver.install_addon(
             f"{self.cfg['EXTENSIONS']['FOX_EXT_BASE_PATH']}/{self.cfg['EXTENSIONS']['GHOSTERY']}"
         )
@@ -290,11 +285,11 @@ class ScrapiaShell(Cmd):
 
     def do_get_chapter_number_from_url(
         self, url: str, return_as_is: bool = False, *args
-    ) -> int:
+    ) -> int | None:
         """ "Setting `return_as_is` to True will return the number as a string, this is used by the `end_cleanly` function."""
         if not self.is_ready:
             click.echo("Can run only after `setup` is invoked!")
-            return None
+            return
 
         # This returns only the relevant part (the part with the chapter no)
         url = url.rstrip("/").split("/")[-1]
@@ -318,15 +313,19 @@ class ScrapiaShell(Cmd):
         url: str = input("Enter url: ").strip()
         self.__driver.get(url)
 
-    def do_end_cleanly(self, *args) -> None:
+    def do_end_cleanly(self, onlyDriverQuit: bool=False, *args):
         """Invokes two functions:
 
         `increment_ch_no(commit=True)` and
         `driver.quit()`
         \n
+        Simply quits the driver if `onlyDriverQuit` is set to `True`.
         Note that `end_cleanly` does 'NOT' end the program execution, it just ends the browser and commits
         to db."""
 
+        if onlyDriverQuit:
+            self.__driver.quit()
+            return
         current_ch_no: str = self.do_get_chapter_number_from_url(
             self.__driver.current_url, return_as_is=True
         )
@@ -341,15 +340,16 @@ class ScrapiaShell(Cmd):
     def do_exit(self, *args) -> bool:
         """Exits the interactive shell"""
         try:
-            self.CH_NO = int(
-                self.do_get_chapter_number_from_url(
-                    self.__driver.current_url, return_as_is=True
+            if self.is_ready:
+                self.CH_NO = int(
+                    self.do_get_chapter_number_from_url(
+                        self.__driver.current_url, return_as_is=True
+                    )
                 )
-            )
         except ValueError:
             pass
         finally:
-            self.do_end_cleanly()
+            self.do_end_cleanly(onlyDriverQuit=not(self.is_ready))
             exit()  # This kills the daemon
 
     def do_is_ready(self, show: bool = False, *args) -> None:
