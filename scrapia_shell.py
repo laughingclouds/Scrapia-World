@@ -36,7 +36,7 @@ from utils.termcolor import colored
 from utils.db import getChapterNumber, getConAndCur
 
 
-def setup_browser(exec_path: str, isHeadless: bool=True):
+def setup_browser(exec_path: str, isHeadless: bool = True):
     firefox_options: Options = Options()
     firefox_options.headless = isHeadless
 
@@ -101,7 +101,9 @@ class ScrapiaShell(Cmd):
 
             novel_page_dict: dict = load(novel_page_fobj)
 
-            self.__PANEL_STRUCT_DICT: dict = load(panel_struct_fobj)[novel_name]
+            self.__PANEL_STRUCT_DICT: dict = dict(
+                reversed(list(load(panel_struct_fobj)[novel_name].items()))
+            )
             self.__NOVEL_PAGE_INFO: dict[str, str] = novel_page_dict["novel_page_info"][
                 novel_name
             ]
@@ -118,7 +120,7 @@ class ScrapiaShell(Cmd):
         self.__NOVEL_SAVE_PATH_BASE = self.__NOVEL_PAGE_INFO["NOVEL_SAVE_PATH_BASE"]
         self.__EMAIL = self.cfg["LOGIN"]["EMAIL"]
         self.__PASSWORD = self.cfg["LOGIN"]["PASSWORD"]
-        
+
         self.__mydb, self.__cursor = getConAndCur(self.__DATABASE)
         self.CH_NO = getChapterNumber(
             self.__mydb, self.__cursor, self.__TABLE, self.__NOVEL
@@ -159,14 +161,14 @@ class ScrapiaShell(Cmd):
         of wuxiaworld. After sleeping for 7 seconds the code will then begin to close any unwanted tabs (closes any tabs that are not `MAIN_HANDLE`)
         and also return focus to the login window.
         """
-        
+
         self.__driver.install_addon(
             f"{self.cfg['EXTENSIONS']['FOX_EXT_BASE_PATH']}/{self.cfg['EXTENSIONS']['GHOSTERY']}"
         )
         self.__driver.install_addon(
             f"{self.cfg['EXTENSIONS']['FOX_EXT_BASE_PATH']}/{self.cfg['EXTENSIONS']['PRIVACY_BADGER']}"
         )
-        self.__driver.get(self.cfg['LOGIN']['LOGIN_FROM'])
+        self.__driver.get(self.cfg["LOGIN"]["LOGIN_FROM"])
         WebDriverWait(self.__driver, 7).until(
             EC.presence_of_all_elements_located((By.TAG_NAME, "main"))
         )
@@ -319,7 +321,7 @@ class ScrapiaShell(Cmd):
         url: str = input("Enter url: ").strip()
         self.__driver.get(url)
 
-    def do_end_cleanly(self, onlyDriverQuit: bool=False, *args):
+    def do_end_cleanly(self, onlyDriverQuit: bool = False, *args):
         """Invokes two functions:
 
         `increment_ch_no(commit=True)` and
@@ -355,7 +357,7 @@ class ScrapiaShell(Cmd):
         except ValueError:
             pass
         finally:
-            self.do_end_cleanly(onlyDriverQuit=not(self.is_ready))
+            self.do_end_cleanly(onlyDriverQuit=not (self.is_ready))
             exit()  # This kills the daemon
 
     def do_is_ready(self, show: bool = False, *args) -> None:
@@ -368,7 +370,7 @@ class ScrapiaShell(Cmd):
             self.is_ready = True
             click.echo("Value has been set to True!")
 
-    def do_open_chapterhead_then_panel(self, *args) -> None:
+    def do_openChapterPanel(self, *args) -> None:
         """The name makes it quite obvious...I'll come up with a better description at some later date."""
 
         if not self.is_ready:
@@ -378,7 +380,7 @@ class ScrapiaShell(Cmd):
         # starts from '2' because in the initial setup the first panel is open by default, clicking on it, will close
         # and hence, hide the chapters withing that panel.
 
-        self.__driver.find_element_by_partial_link_text("Chapters").click()
+        # self.__driver.find_element_by_partial_link_text("Chapters").click()
         # This will open only the required panel in the chapters section of ww /atg
         try:
             for index, chapter_tuple in enumerate(self.__PANEL_STRUCT_DICT):
@@ -387,6 +389,7 @@ class ScrapiaShell(Cmd):
                 )  # Yes, this is actually a list
                 if chapter_tuple[0] <= self.CH_NO <= chapter_tuple[1]:
                     if index == 0:
+                        # since panel for index 0 will already be open
                         continue
                     self.__driver.find_element_by_partial_link_text(
                         self.__PANEL_STRUCT_DICT[str(chapter_tuple)]
@@ -471,10 +474,10 @@ class ScrapiaShell(Cmd):
             self.is_ready = True
             self.__install_addon_clean_tabs_get_login_window()
 
-            sleep(5)            
+            sleep(5)
             self.__login_key_strokes_goto_chapterpage()
 
-            self.do_open_chapterhead_then_panel()
+            self.do_openChapterPanel()
             sleep(3)  # just wait...it's extra safe
 
             element_to_click: str = (
