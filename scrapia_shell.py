@@ -386,7 +386,7 @@ class ScrapiaShell(Cmd):
             jshs.clickElementWithInnerTextS("button", "chapters")            
         )
         # This will open only the required panel in the chapters section of ww /atg
-        try:
+        try:            
             for index, chapter_tuple in enumerate(self.__PANEL_STRUCT_DICT):
                 chapter_tuple: list[int, int] = eval(
                     chapter_tuple
@@ -395,17 +395,20 @@ class ScrapiaShell(Cmd):
                     if index == 0:
                         # since panel for index 0 will already be open
                         continue
-                    self.__driver.find_element_by_partial_link_text(
-                        self.__PANEL_STRUCT_DICT[str(chapter_tuple)]
-                    ).click()
+                    self.__driver.execute_script(
+                        jshs.clickElementStartingWithStrS(
+                            "span", self.__PANEL_STRUCT_DICT[str(chapter_tuple)]
+                        )
+                    )
                     # Since chapter_tuple is also a key we use it to access the value in panel_struct_dict
                     return None
                 if index == 0:
-                    self.__driver.find_element_by_partial_link_text(
-                        self.__PANEL_STRUCT_DICT[str(chapter_tuple)]
-                    ).click()
+                    self.__driver.execute_script(
+                        jshs.clickElementStartingWithStrS(
+                            "span", self.__PANEL_STRUCT_DICT[str(chapter_tuple)]
+                        )
+                    )
                     print("First panel closed")
-                    # This will close the first panel
                 continue
         except exceptions.NoSuchElementException as e:
             print(e, "From function: self.do_open_chapterhead_then_panel", sep="\n\n")

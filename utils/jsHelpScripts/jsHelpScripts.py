@@ -25,3 +25,14 @@ def clickElementWithInnerTextS(
 
 def clickFirstElementFromElementList(tagName: str) -> str:
     return f"""document.getElementsByTagName("{tagName}")[0].click();"""
+
+def clickElementStartingWithStrS(tagName: str, startingTxt: str) -> str:
+    return ''.join(
+        (
+            "let elementList=document",
+            f""".getElementsByTagName("{tagName}");""",
+            "for(let element of elementList){",
+            f"""if(element.innerText.startsWith("{startingTxt}"))""",
+            "{element.click();}", "}"
+        )
+    )
