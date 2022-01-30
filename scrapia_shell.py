@@ -32,8 +32,9 @@ from selenium.webdriver.remote.webelement import WebElement  # for type hinting
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from utils.db import getChapterNumberFrmDB, getConAndCur
 from utils.termcolor import colored
-from utils.db import getChapterNumber, getConAndCur
+import utils.jsHelpScripts as jshs
 
 
 def setup_browser(exec_path: str, isHeadless: bool = True):
@@ -91,7 +92,7 @@ class ScrapiaShell(Cmd):
         self.__NOVEL = novel_name
         # To make sure certain functions run only after `setup` is invoked
         self.is_ready: bool = False
-        self._save_src: bool = False  # If set, we'll save as html instead.
+        self._save_src: bool = True  # If set, we'll save as html instead.
 
         # Reading from the json file
         with open("novel_page_info.json", "r") as novel_page_fobj, open(
@@ -122,7 +123,7 @@ class ScrapiaShell(Cmd):
         self.__PASSWORD = self.cfg["LOGIN"]["PASSWORD"]
 
         self.__mydb, self.__cursor = getConAndCur(self.__DATABASE)
-        self.CH_NO = getChapterNumber(
+        self.CH_NO = getChapterNumberFrmDB(
             self.__mydb, self.__cursor, self.__TABLE, self.__NOVEL
         )
 
@@ -186,15 +187,9 @@ class ScrapiaShell(Cmd):
         # Use this stuff to setup the login window (You don't want any junk in some new tab)
         sleep(2)
         # click the first button on the page, it will make login button visible
-        js = """document.getElementsByTagName("button")[0].click();
-                let btnList = document.getElementsByTagName("button");
-
-                for (let btn of btnList) {
-                if (btn.innerText.toLowerCase() == "log in") {
-                    btn.click();
-                    }
-                }
-            """
+        js = jshs.clickFirstElementFromElementList(
+            "button"
+        ) + jshs.clickElementWithInnerTextS("button", "log in")
         self.__driver.execute_script(js)
 
     def __invoke_scrape_sleep_goto_next_page(self) -> None:
@@ -227,7 +222,7 @@ class ScrapiaShell(Cmd):
             if not self.is_ready:
                 self.do_setup()
 
-            if self.do_get_chapter_number_from_url(self.__INITIAL_SCRAPE) == self.CH_NO:
+            if self.do_getChapterNumberFrmURL(self.__INITIAL_SCRAPE) == self.CH_NO:
                 print(f"FOUND----------CHAPTER----------{self.CH_NO}")
                 self.__driver.get(self.__INITIAL_SCRAPE)
                 sleep(5)
@@ -250,7 +245,7 @@ class ScrapiaShell(Cmd):
             print("----------ERROR----------")
             print(e)
             self.do_end_cleanly()
-            return None
+            return
 
     def do_ch_no(self, *args) -> None:
         """Perform operations on `self.CH_NO`."""
@@ -272,6 +267,8 @@ class ScrapiaShell(Cmd):
         new_value = input("change to true?\n(y/n) ")
         if new_value == "y":
             self._save_src = True
+        elif new_value := input("change to false?\n(y/n) ") == "y":
+            self._save_src = False
         else:
             print("Aborted!")
 
@@ -291,7 +288,7 @@ class ScrapiaShell(Cmd):
             click.echo(e + "\n\n" + "Try invoking `setup` first")
             return None
 
-    def do_get_chapter_number_from_url(
+    def do_getChapterNumberFrmURL(
         self, url: str, return_as_is: bool = False, *args
     ) -> int | None:
         """ "Setting `return_as_is` to True will return the number as a string, this is used by the `end_cleanly` function."""
@@ -300,17 +297,21 @@ class ScrapiaShell(Cmd):
             return
 
         # This returns only the relevant part (the part with the chapter no)
-        url = url.rstrip("/").split("/")[-1]
+        url = list(
+            reversed(
+                url.removeprefix("https://www.wuxiaworld.com/novel/")
+                .rstrip("/")
+                .replace("-", " ")
+                .split(" ")
+            )
+        )
         number_as_str: str = ""
-        was_prev_element_digit: bool = False
         for element in url:
-            if element.isdigit():
-                number_as_str += element
-                was_prev_element_digit = True
-            elif not (element.isdigit()) and was_prev_element_digit:
+            if element.isdecimal():
+                number_as_str = element
                 break
-            else:
-                continue
+        if not number_as_str:
+            return
         if return_as_is:
             return number_as_str
         else:
@@ -334,7 +335,7 @@ class ScrapiaShell(Cmd):
         if onlyDriverQuit:
             self.__driver.quit()
             return
-        current_ch_no: str = self.do_get_chapter_number_from_url(
+        current_ch_no: str = self.do_getChapterNumberFrmURL(
             self.__driver.current_url, return_as_is=True
         )
         if (
@@ -350,7 +351,7 @@ class ScrapiaShell(Cmd):
         try:
             if self.is_ready:
                 self.CH_NO = int(
-                    self.do_get_chapter_number_from_url(
+                    self.do_getChapterNumberFrmURL(
                         self.__driver.current_url, return_as_is=True
                     )
                 )
@@ -370,7 +371,7 @@ class ScrapiaShell(Cmd):
             self.is_ready = True
             click.echo("Value has been set to True!")
 
-    def do_openChapterPanel(self, *args) -> None:
+    def do_openChapterHeadThenPanel(self, *args) -> None:
         """The name makes it quite obvious...I'll come up with a better description at some later date."""
 
         if not self.is_ready:
@@ -380,7 +381,10 @@ class ScrapiaShell(Cmd):
         # starts from '2' because in the initial setup the first panel is open by default, clicking on it, will close
         # and hence, hide the chapters withing that panel.
 
-        # self.__driver.find_element_by_partial_link_text("Chapters").click()
+        # self.__driver.find("Chapters").click()
+        self.__driver.execute_script(
+            jshs.clickElementWithInnerTextS("button", "chapters")            
+        )
         # This will open only the required panel in the chapters section of ww /atg
         try:
             for index, chapter_tuple in enumerate(self.__PANEL_STRUCT_DICT):
@@ -457,6 +461,8 @@ class ScrapiaShell(Cmd):
             file_ext = ".html"
             story_content = self.__driver.page_source
         else:
+            # we don't need this if we're saving pg source by default
+            # but this won't work either
             story_content = self.__driver.find_element_by_id("chapter-content").text
         with open(self.__NOVEL_SAVE_PATH_BASE + URL_LAST_PART + file_ext, "w") as f:
             f.write(story_content)
@@ -477,7 +483,7 @@ class ScrapiaShell(Cmd):
             sleep(5)
             self.__login_key_strokes_goto_chapterpage()
 
-            self.do_openChapterPanel()
+            self.do_openChapterHeadThenPanel()
             sleep(3)  # just wait...it's extra safe
 
             element_to_click: str = (
