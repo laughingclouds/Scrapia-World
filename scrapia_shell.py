@@ -8,6 +8,8 @@
     TODO: Make the code connect to the (sqlite) DB
     TODO: Remove DB password requirement
     TODO: Maybe put the code to create the DB in /DB, or maybe shift DB to utils
+7) Add an option to update webdrivers automatically, make a CLI option
+    check out this tool https://pypi.org/project/webdriver-manager/
 """
 # scrapia_world = Scrape wuxia world...
 import threading
@@ -35,7 +37,7 @@ from utils.db import getChapterNumber, getConAndCur
 
 
 def setup_browser(exec_path: str):
-    firefox_options = Options()
+    firefox_options: Options = Options()
     firefox_options.headless = True
 
     prefs = {
@@ -55,7 +57,7 @@ def setup_browser(exec_path: str):
 
     capabilities = DesiredCapabilities.FIREFOX
 
-    firefox_options.set_headless
+    # firefox_options.set_headless(True)
     return Firefox(
         executable_path=exec_path,
         desired_capabilities=capabilities,
@@ -103,7 +105,6 @@ class ScrapiaShell(Cmd):
             self.__NOVEL_PAGE_INFO: dict[str, str] = novel_page_dict["novel_page_info"][
                 novel_name
             ]
-
         self.__EXECUTABLE_PATH_GECKO: str = cfg["DRIVERS"]["GECKO_EXE_PATH"]
         self.__TABLE: str = cfg["SQL"]["TABLE"]
         self.__DATABASE: str = cfg["SQL"]["DATABASE"]
