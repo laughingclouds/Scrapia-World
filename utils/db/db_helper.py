@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 
 
-def getChapterNumber(
+def getChapterNumberFrmDB(
     con: sqlite3.Connection | None,
     cur: sqlite3.Cursor | None,
     table_name: str,
