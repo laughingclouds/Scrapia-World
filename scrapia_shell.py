@@ -84,7 +84,7 @@ class ScrapiaShell(ScrapiaShellHelper):
 
     intro = colored("Hi! Enter `help` for...well...help...", "green")
 
-    def do_nextPage(self) -> None:
+    def do_nextPage(self, *args) -> None:
         """Finds and clicks the `Next` button"""
         self.driver.execute_script(jshs.clickElementStartingWithStrS("span", "Next"))
 
