@@ -55,6 +55,19 @@ def clickFrmSecElementStartingWithStrS(tagName: str, startingTxt: str) -> str:
     )
 
 
+def getXpathStrFrClsNames(tagName: str, *styleClassNames: str) -> str:
+    returnStr = f"//{tagName}["
+    repeatingStr = lambda s: f"contains(@class, '{s}')"
+    numOfClasses = len(styleClassNames)
+    c = 0
+    while c < numOfClasses - 1:
+        returnStr += repeatingStr(styleClassNames[c]) + " and "
+        c += 1
+
+    returnStr += f"{repeatingStr(c)}]"
+    return returnStr
+
+
 def convert2UglyJS(jsScript: str) -> str:
     """Convert a proper javascript script into an ugly script with no spaces"""
     symbols = jsScript.replace("\n", " ").split(" ")
