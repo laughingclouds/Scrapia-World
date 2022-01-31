@@ -4,7 +4,7 @@ from selenium.webdriver import Firefox
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.firefox.options import Options
 
-from sw_utils.novelProfiler import NovelProfiler
+from sw_utils import NovelProfiler
 
 
 class ScrapiaShellHelper(NovelProfiler):

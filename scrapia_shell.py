@@ -23,10 +23,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from sw_utils import clrScrn, colorama
-from sw_utils.termcolor import colored
+from sw_utils import jsHelpScripts as jshs, clrScrn, colored
 from sw_utils.novelProfiler.db import getChapterNumberFrmDB, getConAndCur
-from sw_utils.novelProfiler import jsHelpScripts as jshs
 from scrapia_shell_helper import ScrapiaShellHelper
 
 

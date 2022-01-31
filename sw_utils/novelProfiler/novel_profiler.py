@@ -4,8 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.firefox.webdriver import WebDriver
 
-from .db import DBHelper
-import jsHelpScripts as jshs
+from .db import DBHelper, jsHelpScripts as jshs
 
 
 class NovelProfiler(DBHelper):

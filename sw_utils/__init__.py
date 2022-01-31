@@ -2,6 +2,9 @@ from types import FunctionType
 from click._compat import WIN
 from os import system as systemCmd
 
+from .termcolor import colored
+from .novelProfiler import NovelProfiler, jsHelpScripts
+
 
 def clrScrn(clearFuncClick: FunctionType):
     """clear screen\n
