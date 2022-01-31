@@ -1,13 +1,11 @@
 from cmd import Cmd
-from email.policy import default
 from json import load
 from os import system as systemCmd, listdir
-from tkinter import EXCEPTION
 
 import click
-from click._compat import WIN
 
 import scrapia_shell
+from sw_utils import get_chapter_number_list, clrScrn
 
 
 @click.group("scracli", invoke_without_command=True)
@@ -31,40 +29,6 @@ class OverrideDefault(scrapia_shell.ScrapiaShell):
             return Cmd.default(self, line)
 
 
-def _get_chapter_number_list(chapter_list: list[str]) -> list[int]:
-    """Returns a sorted (asc) list of all the chapter numbers in the file. We can later check and see whether
-    all the chapters are present in ascending order and whether any chapter is missing or not."""
-
-    def _get_number_from_string(string_: str) -> int:
-        """A function to get a number from a string, for example, getting a chapter number from the chapter title."""
-        number_as_str: str = ""
-        was_prev_element_digit: bool = False
-        for element in string_:
-            if element.isdigit():
-                number_as_str += element
-                was_prev_element_digit = True
-            elif not (element.isdigit()) and was_prev_element_digit:
-                return int(number_as_str)
-            else:
-                continue
-        return int(number_as_str)
-
-    sorted_chapter_list: list[int] = [
-        _get_number_from_string(chapter_title) for chapter_title in chapter_list
-    ]
-    sorted_chapter_list.sort()
-    return sorted_chapter_list
-
-
-def _return_novel_info_dict(novel_name: str) -> dict[str, str]:
-    """Returns a dictionary with info on `novel_name`. Refer to the json file to what info is given."""
-
-    with open("novel_page_info.json", "r") as novel_page_fobj:
-        return load(novel_page_fobj)["novel_page_info"][novel_name]
-
-
-def _return_chapter_list(path: str) -> list[str]:
-    return listdir(path)
 
 
 @cli.command()
@@ -72,10 +36,11 @@ def _return_chapter_list(path: str) -> list[str]:
 def count_words(novel_name: str) -> None:
     """Returns the word count of all the files within a directory. Takes in a list of filenames."""
     word_count: int = 0
-    novel_info_dict = _return_novel_info_dict(novel_name)
-    BASE_PATH = novel_info_dict["NOVEL_SAVE_PATH_BASE"]  # Base path for the novel
+    with open("novel_page_info.json", "r") as fobj:
+        novel_info_dict = load(fobj)["novel_page_info"][novel_name]
+    BASE_PATH = novel_info_dict["NOVEL_PATH"]  # Base path for the novel
 
-    for filename in _return_chapter_list(BASE_PATH):
+    for filename in listdir(BASE_PATH):
         with open(f"{BASE_PATH}/{filename}", "r") as file_object:
             chapter_content = file_object.read()
             word_count += len(chapter_content.split())
@@ -109,7 +74,7 @@ def check(
         ]
         chapter_list: list[str] = listdir(novel_page_dict["NOVEL_SAVE_PATH_BASE"])
 
-    sorted_chapter_list: list[int] = _get_chapter_number_list(chapter_list)
+    sorted_chapter_list: list[int] = get_chapter_number_list(chapter_list)
 
     n = len(sorted_chapter_list)
 
@@ -135,13 +100,7 @@ def check(
 @cli.command()
 def cls():
     """clear screen"""
-    try:
-        if WIN:
-            systemCmd("cls")
-        else:
-            systemCmd("clear")
-    except EXCEPTION:
-        click.clear()
+    clrScrn(click.clear)
 
 
 @cli.command()
