@@ -26,6 +26,9 @@ Something like this:
 
 It is recommended to set the default value of every column to the integer value of the first chapter number of a novel.
 
+4. For the other stuff, I'll add in a requirements.txt which you can `pip install -r requirements.txt` within a virtual environment.
+
+
 ```sql
 CREATE TABLE "novel" (
  "ATG" INTEGER DEFAULT 0,
@@ -34,7 +37,6 @@ CREATE TABLE "novel" (
 ```
 
 SQL code for creating the table.
-4. For the other stuff, I'll add in a requirements.txt which you can `pip install -r requirements.txt` within a virtual environment.
 
 **Webdrivers:**
 Browser | Recommended Driver | ...
@@ -44,14 +46,10 @@ Chromium | [chromedriver](https://chromedriver.chromium.org/downloads)
 Firefox | [geckodriver](https://github.com/mozilla/geckodriver/releases)
 
 1. You will need to link to vivaldi's binary file instead of chromes' to use it. This [stackoverflow question](https://stackoverflow.com/questions/59644818/how-to-initiate-a-chromium-based-vivaldi-browser-session-using-selenium-and-pyth) might help you out. For me binary's path was `/opt/vivaldi/vivaldi` (I use linux btw)
-2. There's another problem with vivaldi, you might not have installed the correct version of chromedriver for *your* version of vivaldi.
-In the url area, enter
-
-```shell
-vivaldi://about/
-```
-
-The version of chromium your vivaldi is based on should be visible in the "user agent" field. Install chromedriver for this specific version.
+2. Chromedriver version for vivaldi: 
+  - In the url area, enter ``vivaldi://about/``.
+  - The version of chromium your vivaldi is based on should be visible in the "user agent" field.
+  - Install chromedriver for this specific version.
 3. If you use linux and want to work with vivaldi, you can just copy the code from the [v0.1.0-alpha](https://github.com/r3a10god/Scrapia-World/blob/v0.1.0-alpha/scrapia_world.py) release.
 4. Using the drivers for chromium and firefox should be easy.
 
