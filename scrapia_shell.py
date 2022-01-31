@@ -12,6 +12,7 @@
     check out this tool https://pypi.org/project/webdriver-manager/
 """
 # scrapia_world = Scrape wuxia world...
+from pprint import pprint
 import threading
 from cmd import Cmd
 from sys import exit, exc_info
@@ -118,7 +119,7 @@ class ScrapiaShell(Cmd):
         self.__CHAPTER_NO_PRE = self.__NOVEL_PAGE_INFO["CHAPTER_NO_PRE"]
         self.__INITIAL_SCRAPE = self.__NOVEL_PAGE_INFO["INITIAL_SCRAPE"]
         self.__LATEST_CH_NO = int(self.__NOVEL_PAGE_INFO["LATEST_CH_NO"])
-        self.__NOVEL_SAVE_PATH_BASE = self.__NOVEL_PAGE_INFO["NOVEL_SAVE_PATH_BASE"]
+        self.__NOVEL_PATH = self.__NOVEL_PAGE_INFO["NOVEL_PATH"]
         self.__EMAIL = self.cfg["LOGIN"]["EMAIL"]
         self.__PASSWORD = self.cfg["LOGIN"]["PASSWORD"]
 
@@ -136,11 +137,7 @@ class ScrapiaShell(Cmd):
     def __goto_next_page(self) -> None:
         """Does one simple task, and that is, it clicks on the button, that will take us to
         the next page or to the next chapter."""
-
-        element: WebElement = self.__driver.find_element_by_class_name("top-bar-area")
-        elements = element.find_elements_by_xpath(".//a")  # Returns a list of elements
-
-        elements[2].click()  # This clicks the `next button`
+        self.__driver.execute_script(jshs.clickElementStartingWithStrS("span", "Next"))        
 
     def __increment_ch_no(self, commit: bool = False) -> None:
         """This function `by default`, will only increment `CH_NO` by 1.\n
@@ -392,6 +389,7 @@ class ScrapiaShell(Cmd):
                     chapter_tuple
                 )  # Yes, this is actually a list
                 if chapter_tuple[0] <= self.CH_NO <= chapter_tuple[1]:
+                    pprint(self.__PANEL_STRUCT_DICT)
                     if index == 0:
                         # since panel for index 0 will already be open
                         continue
@@ -467,7 +465,7 @@ class ScrapiaShell(Cmd):
             # we don't need this if we're saving pg source by default
             # but this won't work either
             story_content = self.__driver.find_element_by_id("chapter-content").text
-        with open(self.__NOVEL_SAVE_PATH_BASE + URL_LAST_PART + file_ext, "w") as f:
+        with open(self.__NOVEL_PATH + URL_LAST_PART + file_ext, "w") as f:
             f.write(story_content)
         self.__increment_ch_no()
 
@@ -482,9 +480,10 @@ class ScrapiaShell(Cmd):
         try:
             self.is_ready = True
             self.__install_addon_clean_tabs_get_login_window()
-
             sleep(5)
+
             self.__login_key_strokes_goto_chapterpage()
+            sleep(2)
 
             self.do_openChapterHeadThenPanel()
             sleep(3)  # just wait...it's extra safe

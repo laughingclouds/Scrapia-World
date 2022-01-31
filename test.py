@@ -1,41 +1,35 @@
-"""TODO: Unimportant, delete later"""
-from re import split as regExpSplit
+from configparser import ConfigParser
+from time import sleep
 
-js = """document.getElementsByTagName("button")[0].click();
-                let btnList = document.getElementsByTagName("button");
+from scrapia_shell import setup_browser
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 
-                for (let btn of btnlist) {
-                if (btn.innerText.toLowerCase() == "log in") {
-                    btn.click();
-                    }
-                }
-            """
-
-"".join(regExpSplit(" |\n", js))
+import utils.jsHelpScripts as jshs
 
 
-def do_getChapterNumberFrmURL(
-    url: str, return_as_is: bool = False, *args
-) -> int | None:
-    # This returns only the relevant part (the part with the chapter no)
-    url = list(
-        reversed(
-            url.removeprefix("https://www.wuxiaworld.com/novel/")
-            .rstrip("/")
-            .replace("-", " ")
-            .split(" ")
-        )
-    )
-    number_as_str: str = ""
-    for element in url:
-        if element.isdecimal():
-            number_as_str = element
-            break
-    if return_as_is:
-        return number_as_str
-    else:
-        return int(number_as_str)
+cfg = ConfigParser()
+cfg.read("config.cfg")
 
+# class="grid grid-cols-1 md:grid-cols-2 w-full"
+driver = setup_browser(cfg['DRIVERS']['GECKO_EXE_PATH'], False)
+driver.get("https://www.wuxiaworld.com/novel/against-the-gods")
+driver.install_addon(f"{cfg['EXTENSIONS']['FOX_EXT_BASE_PATH']}/{cfg['EXTENSIONS']['UBO']}")
 
-if __name__ == "__main__":
-    print(do_getChapterNumberFrmURL("https://www.wuxiaworld.com/novel/against-the-gods/atg-chapter-1926", return_as_is=True))
+sleep(5)
+
+# NOTE: find_elements_by_* commands are deprecated!!!
+# NOTE: don't need to open the accordian from now on
+# driver.execute_script(jshs.clickElementStartingWithStrS("span", "Volume"))
+elList = driver.find_elements(By.XPATH, "//div[contains(@class, 'grid') and contains(@class, 'grid-cols-1') and contains(@class, 'md:grid-cols-2') and contains(@class, 'w-full')]")
+el = elList[0]
+aList = el.find_elements(By.TAG_NAME, "a")
+aList[0].get_attribute("href")
+
+def get_hrefList(divList: list[WebElement]) -> list[str]:
+    hrefList = []
+    for divElement in divList:
+        aList: list[WebElement] = divElement.find_elements(By.TAG_NAME, "a")
+        hrefList.extend([a.get_attribute("href") for a in aList])
+    return hrefList
+# [].sort(reverse=True)

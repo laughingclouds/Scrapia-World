@@ -5,7 +5,7 @@
             "CHAPTER_NO_PRE": "Chapter ",
             "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/against-the-gods/atg-chapter-0",
             "LATEST_CH_NO": "1926",
-            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/ATG/",
+            "NOVEL_PATH": "/home/laughinglouds/Project/Scrapia-World/novel/ATG/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/against-the-gods"
         },
 
@@ -23,7 +23,7 @@
             "CHAPTER_NO_PRE": "Chapter ",
             "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/overgeared/og-chapter-1",
             "LATEST_CH_NO": "1432",
-            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/OG/",
+            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/Scrapia-World/novel/OG/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/overgeared"
         },
 
