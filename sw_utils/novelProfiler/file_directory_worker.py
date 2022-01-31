@@ -1,3 +1,5 @@
+from io import FileIO
+from json import load
 from os import makedirs, listdir
 
 
@@ -12,8 +14,7 @@ class File_Directory_JSON_Worker:
 
         self.createDirectoriesReturnTrueIfExists()
         # <>_read.json & <>_toRead.json
-        f_r, f_tR = self.checkIfFilesExist()
-        
+        return self.readFiles(*self.checkIfFilesExist())
 
     def createDirectoriesReturnTrueIfExists(self) -> bool:
         """create `self.novelPath`/profile/
@@ -24,7 +25,7 @@ class File_Directory_JSON_Worker:
         except FileExistsError:
             return True
 
-    def checkIfFilesExist(self):
+    def checkIfFilesExist(self) -> tuple[tuple[bool, str, FileIO | None]]:
         """Check for existence of
         <self.novelName>_read.json and <self.novelName>_toRead.json
         \nCreate them if they don't exist"""
@@ -39,21 +40,15 @@ class File_Directory_JSON_Worker:
             if fileExistanceList == [True, True]:
                 break
 
+        fileObjList = [None, None]
         for i in range(2):
             if not fileExistanceList[i]:
-                open(f"{self.novelPrfPath}/{fileNameTuple[i]}", "w")
-        return tuple(zip(fileExistanceList, fileNameTuple))
+                fileObjList[i] = open(f"{self.novelPrfPath}/{fileNameTuple[i]}", "r+")
+        return tuple(zip(fileExistanceList, fileNameTuple, fileObjList))
 
-    def readFiles(self, f_r: tuple[bool, str], f_tR: tuple[bool, str]):
-        """
-        f_r[0] == \n
-        False -> Don't return fobj\n
-        True -> Return f_rReadFobj\n
-
-        f_tR[0] == \n
-        False -> Return f_tRWriteFObj\n
-        True -> 
-        """
-        f_rWriteFObj = open(f_r[1], 'w')
-        f_tRWriteFObj = open(f_tR[1], 'w')
-        pass
+    def readFiles(self, *f_s: tuple[bool, str, FileIO]):
+        f_r, f_tR = f_s        
+        return (
+            (f_r[0], load(f_r), f_r[2]),
+            (f_tR[0], load(f_tR[2]), f_tR[2])
+        )
