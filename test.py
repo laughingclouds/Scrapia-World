@@ -5,7 +5,7 @@ from scrapia_shell import setup_browser
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-import utils.jsHelpScripts as jshs
+import sw_utils.jsHelpScripts as jshs
 
 
 cfg = ConfigParser()

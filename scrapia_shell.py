@@ -33,9 +33,9 @@ from selenium.webdriver.remote.webelement import WebElement  # for type hinting
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from utils.db import getChapterNumberFrmDB, getConAndCur
-from utils.termcolor import colored
-import utils.jsHelpScripts as jshs
+from sw_utils.db import getChapterNumberFrmDB, getConAndCur
+from sw_utils.termcolor import colored
+import sw_utils.jsHelpScripts as jshs
 
 
 def setup_browser(exec_path: str, isHeadless: bool = True):
@@ -69,7 +69,7 @@ def setup_browser(exec_path: str, isHeadless: bool = True):
 
 # So that termcolor can work on windows
 if returnOSName() == "Windows":
-    from utils import colorama
+    from sw_utils import colorama
 
     colorama.init()
 
