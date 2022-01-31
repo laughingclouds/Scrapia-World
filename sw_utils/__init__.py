@@ -1,3 +1,4 @@
+from types import FunctionType
 from click._compat import WIN
 from os import system as systemCmd
 
@@ -5,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
 
-def clrScrn(clearFuncClick: function):
+def clrScrn(clearFuncClick: FunctionType):
     """clear screen\n
     Input is click.clear()\n
     Or any function that clears the screen"""

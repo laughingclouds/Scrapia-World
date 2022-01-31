@@ -1,56 +1,44 @@
 {
     "novel_page_info": {
         "ATG": {
-            "CHAPTER_NO_SUF": " - ",
-            "CHAPTER_NO_PRE": "Chapter ",
-            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/against-the-gods/atg-chapter-0",
-            "LATEST_CH_NO": "1926",
+            "NOVEL_CODE": "ATG",
+            "ACCORDIAN_TXT": "Volume ",
             "NOVEL_PATH": "/home/laughinglouds/Project/Scrapia-World/novel/ATG/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/against-the-gods"
         },
 
         "LOAR": {
-            "CHAPTER_NO_SUF": ": ",
-            "CHAPTER_NO_PRE": "Chapter ",
-            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/lord-of-all-realms/chapter-1-an-unstable-situation",
-            "LATEST_CH_NO": "1823",
-            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Programming/newScrapiaWorld/novel/LOAR/",
+            "NOVEL_CODE": "LOAR",
+            "ACCORDIAN_TXT": "Chapter ",
+            "NOVEL_PATH": "/home/laughinglouds/Programming/newScrapiaWorld/novel/LOAR/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/lord-of-all-realms"
         },
 
         "OG": {
-            "CHAPTER_NO_SUF": "",
-            "CHAPTER_NO_PRE": "Chapter ",
-            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/overgeared/og-chapter-1",
-            "LATEST_CH_NO": "1432",
-            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/Scrapia-World/novel/OG/",
+            "NOVEL_CODE": "OG",
+            "ACCORDIAN_TXT": "Chapter ",
+            "NOVEL_PATH": "/home/laughinglouds/Project/Scrapia-World/novel/OG/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/overgeared"
         },
 
         "7K": {
-            "CHAPTER_NO_SUF": " – ",
-            "CHAPTER_NO_PRE": "Chapter ",
-            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/7-killers/7k-chapter-7",
-            "LATEST_CH_NO": "14",
-            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/7K/",
+            "NOVEL_CODE": "7K",
+            "ACCORDIAN_TXT": "Chapter ",
+            "NOVEL_PATH": "/home/laughinglouds/Project/newScrapiaWorld/novel/7K/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/7-killers"
         },
 
         "TRK": {
-            "CHAPTER_NO_SUF": ": ",
-            "CHAPTER_NO_PRE": "Chapter ",
-            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/tomb-raider-king/trk-chapter-1",
-            "LATEST_CH_NO": "415",
-            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/TRK/",
+            "NOVEL_CODE": "TRK",
+            "ACCORDIAN_TXT": "Chapter ",
+            "NOVEL_PATH": "/home/laughinglouds/Project/newScrapiaWorld/novel/TRK/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/tomb-raider-king"
         },
 
         "EYEM": {
-            "CHAPTER_NO_SUF": "",
-            "CHAPTER_NO_PRE": "Chapter ",
-            "INITIAL_SCRAPE": "https://www.wuxiaworld.com/novel/everyone-is-young-except-for-me/eyem-chapter-1",
-            "LATEST_CH_NO": "375",
-            "NOVEL_SAVE_PATH_BASE": "/home/laughinglouds/Project/newScrapiaWorld/novel/EYEM/",
+            "NOVEL_CODE": "EYEM",
+            "ACCORDIAN_TXT": "Chapter ",
+            "NOVEL_PATH": "/home/laughinglouds/Project/newScrapiaWorld/novel/EYEM/",
             "NOVEL_PAGE": "https://www.wuxiaworld.com/novel/everyone-is-young-except-for-me"   
         }
     }

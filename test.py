@@ -31,5 +31,4 @@ def get_hrefList(divList: list[WebElement]) -> list[str]:
     for divElement in divList:
         aList: list[WebElement] = divElement.find_elements(By.TAG_NAME, "a")
         hrefList.extend([a.get_attribute("href") for a in aList])
-    return hrefList
-# [].sort(reverse=True)
+    return list(reversed(hrefList))
