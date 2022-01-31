@@ -33,7 +33,7 @@ from selenium.webdriver.remote.webelement import WebElement  # for type hinting
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from sw_utils.db import getChapterNumberFrmDB, getConAndCur
+from sw_utils.novelProfiler.db import getChapterNumberFrmDB, getConAndCur
 from sw_utils.termcolor import colored
 import sw_utils.jsHelpScripts as jshs
 
