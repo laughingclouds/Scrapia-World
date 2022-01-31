@@ -4,7 +4,7 @@ from os import system as systemCmd, listdir
 
 import click
 
-import scrapia_shell
+from scrapia_shell import ScrapiaShell
 from sw_utils import get_chapter_number_list, clrScrn
 
 
@@ -15,7 +15,7 @@ def cli(ctx):
     pass
 
 
-class OverrideDefault(scrapia_shell.ScrapiaShell):
+class OverrideDefault(ScrapiaShell):
     """Overrides `default` function of `ScrapiaShell`"""
 
     # We will not define a __init__ because we want to use
@@ -29,19 +29,19 @@ class OverrideDefault(scrapia_shell.ScrapiaShell):
             return Cmd.default(self, line)
 
 
-
-
 @cli.command()
 @click.argument("novel_name", type=str)
 def count_words(novel_name: str) -> None:
-    """Returns the word count of all the files within a directory. Takes in a list of filenames."""
+    """
+    Returns the word count of all the files within a directory.
+    """
     word_count: int = 0
     with open("novel_page_info.json", "r") as fobj:
         novel_info_dict = load(fobj)["novel_page_info"][novel_name]
-    BASE_PATH = novel_info_dict["NOVEL_PATH"]  # Base path for the novel
+    NOVEL_PATH = novel_info_dict["NOVEL_PATH"]  # Base path for the novel
 
-    for filename in listdir(BASE_PATH):
-        with open(f"{BASE_PATH}/{filename}", "r") as file_object:
+    for filename in listdir(NOVEL_PATH):
+        with open(f"{NOVEL_PATH}/{filename}", "r") as file_object:
             chapter_content = file_object.read()
             word_count += len(chapter_content.split())
 
@@ -63,38 +63,44 @@ def count_words(novel_name: str) -> None:
 )
 @click.argument("novel_name", type=str)
 def check(
-    novel_name: str, latest_chapter: bool = False, list_all_chapters: bool = False
+    novelName: str, latestChapter: bool = False, listAllChapters: bool = False
 ):
     """Check wether any chapters are missing."""
 
-    # This open the json file to return the path of the novel `novel_name`. Open the json to know its structure.
-    with open("novel_page_info.json", "r") as novel_page_info_fobj:
-        novel_page_dict: dict[str, str] = load(novel_page_info_fobj)["novel_page_info"][
-            novel_name
-        ]
-        chapter_list: list[str] = listdir(novel_page_dict["NOVEL_SAVE_PATH_BASE"])
+    # This open the json file to return the path of the novel `novel_name`.
+    # Open the json to know its structure.
+    with open("novel_page_info.json", "r") as fobj:
+        novelPageDict: dict[str, str] = load(fobj)["novel_page_info"][novelName]
+        chapterList: list[str] = listdir(novelPageDict["NOVEL_PATH"])
 
-    sorted_chapter_list: list[int] = get_chapter_number_list(chapter_list)
+    sortedChapterList: list[int] = get_chapter_number_list(chapterList)
 
-    n = len(sorted_chapter_list)
+    n = len(sortedChapterList)
 
-    flag: bool = False  # using this you can find more than one missing chapters
+    # find more than one missing chapters using this
+    flag: bool = False
     possible_missing_chapters: list[str] = []
     for i in range(0, n - 1):
-        if sorted_chapter_list[i + 1] != sorted_chapter_list[i] + 1:
+        if sortedChapterList[i + 1] != sortedChapterList[i] + 1:
             flag = True
-            possible_missing_chapters.append(sorted_chapter_list[i] + 1)
+            possible_missing_chapters.append(sortedChapterList[i] + 1)
     if not flag:
         click.echo("Everythings fine chap.")
     else:
         click.echo(
-            f"There seems to be a problem, please check if the following chapters exist:\n{possible_missing_chapters}"
+            "".join(
+                (
+                    "There seems to be a problem, please ",
+                    "check if the following chapters exist:\n",
+                    f"{possible_missing_chapters}",
+                )
+            )
         )
 
-    if latest_chapter:
-        click.echo(f"This is the latest chapter number: {sorted_chapter_list[-1]}")
-    if list_all_chapters:
-        click.echo(f"Here is the list of all the chapters:\n{sorted_chapter_list}")
+    if latestChapter:
+        click.echo(f"Latest chapter number: {sortedChapterList[-1]}")
+    if listAllChapters:
+        click.echo(f"List of all chapters:\n{sortedChapterList}")
 
 
 @cli.command()
@@ -114,7 +120,7 @@ def greet(n, name):
 
 @cli.command()
 @click.option(
-    "-headless",
+    "--headless",
     default=1,
     help="Start in headless mode. Default value is 1. "
     + "Set to 0, to start in graphical mode.",

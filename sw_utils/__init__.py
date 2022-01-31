@@ -2,9 +2,6 @@ from types import FunctionType
 from click._compat import WIN
 from os import system as systemCmd
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-
 
 def clrScrn(clearFuncClick: FunctionType):
     """clear screen\n
@@ -17,14 +14,6 @@ def clrScrn(clearFuncClick: FunctionType):
             systemCmd("clear")
     except Exception as e:
         clearFuncClick()
-
-
-def get_hrefList(divList: list[WebElement]) -> list[str]:
-    hrefList = []
-    for divElement in divList:
-        aList: list[WebElement] = divElement.find_elements(By.TAG_NAME, "a")
-        hrefList.extend([a.get_attribute("href") for a in aList])
-    return list(reversed(hrefList))
 
 
 def get_chapter_number_list(chapter_list: list[str]) -> list[int]:

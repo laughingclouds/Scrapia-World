@@ -1,6 +1,11 @@
+from cmd import Cmd
 import sqlite3
 from pathlib import Path
 
+
+class DBHelper(Cmd):
+    def __init__(self):
+        Cmd.__init__(self)
 
 def getChapterNumberFrmDB(
     con: sqlite3.Connection | None,

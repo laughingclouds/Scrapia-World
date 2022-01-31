@@ -10,73 +10,37 @@
 # scrapia_world = Scrape wuxia world...
 from pprint import pprint
 import threading
-from cmd import Cmd
-from sys import exit, exc_info
+from sys import exit
 from traceback import print_exc
 from json import load
 from time import sleep  # for timeouts, cuz' you don't wanna get your IP banned...
 from platform import system as returnOSName
-from configparser import ConfigParser
 
 from click import clear, echo
 from selenium.common import exceptions
-from selenium.webdriver import DesiredCapabilities
-from selenium.webdriver import Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.webdriver import WebDriver
-from selenium.webdriver.remote.webelement import WebElement  # for type hinting
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-import sw_utils.jsHelpScripts as jshs
-from sw_utils import clrScrn, get_hrefList
+from sw_utils import clrScrn, colorama
 from sw_utils.termcolor import colored
 from sw_utils.novelProfiler.db import getChapterNumberFrmDB, getConAndCur
+from sw_utils.novelProfiler import jsHelpScripts as jshs
+from scrapia_shell_helper import ScrapiaShellHelper
 
 
-def setup_browser(exec_path: str, isHeadless: bool = True):
-    firefox_options: Options = Options()
-    firefox_options.headless = isHeadless
-
-    prefs = {
-        "profile.managed_default_content_settings.images": 2,
-        "disk-cache-size": 4096,
-        "intl.accept_languages": "en-US",
-    }
-    args = {
-        "--dns-prefetch-disable",
-        "--no-sandbox",
-    }
-
-    for pref in prefs:
-        firefox_options.set_preference(pref, prefs[pref])
-    for arg in args:
-        firefox_options.add_argument(arg)
-
-    capabilities = DesiredCapabilities.FIREFOX
-
-    # firefox_options.set_headless(True)
-    return Firefox(
-        executable_path=exec_path,
-        desired_capabilities=capabilities,
-        options=firefox_options,
-    )
-
-
-# So that termcolor can work on windows
 if returnOSName() == "Windows":
     from sw_utils import colorama
 
     colorama.init()
 
 
-class ScrapiaShell(Cmd):
+class ScrapiaShell(ScrapiaShellHelper):
     """
     Shell for scraping
 
-    TODO create a helper class that has methods of current class 
+    TODO create a helper class that has methods of current class
     that won't be shown in the interactive shell
     TODO Create a NovelProfiler class or something as well
     """
@@ -84,47 +48,41 @@ class ScrapiaShell(Cmd):
     # ctx will be used in the class that overrides this one
 
     def __init__(self, isHeadless: int, novel_name: str, ctx):
-        Cmd.__init__(self)
+        # Cmd.__init__(self)
+        ScrapiaShellHelper.__init__(self)
 
-        cfg = ConfigParser()
-        cfg.read("config.cfg")
-        self.cfg = cfg
-        self.ctx = ctx
-        # self.FIRST_KEY: str = ''
+        self.isHeadless = isHeadless
+
         self.SCRAPER_THREAD = threading.Thread(target=self.startScraping)
         # using sys.exit will now kill this thread.
         self.SCRAPER_THREAD.daemon = True
-        self.__NOVEL = novel_name
+        self.NOVEL = novel_name
         # To make sure certain functions run only after `setup` is invoked
         self.is_ready: bool = False
-        self._save_src: bool = True  # If set, we'll save as html instead.
+        self.saveSrc: bool = True  # If set, we'll save as html instead.
 
         # Reading from the json file
         with open("novel_page_info.json", "r") as novel_page_fobj:
             # Refer to the above json files to understand this mess
 
-            novel_page_dict: dict = load(novel_page_fobj)            
+            novel_page_dict: dict = load(novel_page_fobj)
             self.NOVEL_PAGE_INFO: dict[str, str] = novel_page_dict["novel_page_info"][
                 novel_name
             ]
-        self.__EXECUTABLE_PATH_GECKO: str = cfg["DRIVERS"]["GECKO_EXE_PATH"]
-        self.__TABLE: str = cfg["SQL"]["TABLE"]
-        self.__DATABASE: str = cfg["SQL"]["DATABASE"]
 
         #  These will be used later on
-        self.CH_NO: int = 0        
+        self.CH_NO: int = 0
         self.NOVEL_PATH = self.NOVEL_PAGE_INFO["NOVEL_PATH"]
-        self.EMAIL = self.cfg["LOGIN"]["EMAIL"]
-        self.PASSWORD = self.cfg["LOGIN"]["PASSWORD"]
 
-        self.__mydb, self.__cursor = getConAndCur(self.__DATABASE)
+        # create a DBHelper class and make NovelProfiler inherit it
+        self.mydb, self.cursor = getConAndCur(self.DATABASE)
         self.CH_NO = getChapterNumberFrmDB(
-            self.__mydb, self.__cursor, self.__TABLE, self.__NOVEL
+            self.mydb, self.cursor, self.TABLE, self.NOVEL
         )
 
-        self.driver = setup_browser(self.__EXECUTABLE_PATH_GECKO, isHeadless)
+        self.driver = self.setup_browser(self.GECKO_EXE_PATH, isHeadless)
 
-        self.prompt = colored(f"({self.__NOVEL}) ", "red")
+        self.prompt = colored(f"({self.NOVEL}) ", "red")
 
     intro = colored("Hi! Enter `help` for...well...help...", "green")
 
@@ -136,14 +94,14 @@ class ScrapiaShell(Cmd):
         """
         - Default behaviour: Increment `CH_NO` by 1
         - On setting `commit` to `True`: Don't increment, commit to database
-        
+
         NOTE set `commit` to `True` only when program is about to/ made to end
         """
 
         if commitOnly:
-            with self.__mydb:
-                self.__cursor.execute(
-                    f"UPDATE {self.__TABLE} SET {self.__NOVEL}={self.CH_NO};"
+            with self.mydb:
+                self.cursor.execute(
+                    f"UPDATE {self.TABLE} SET {self.NOVEL}={self.CH_NO};"
                 )
             return
         self.CH_NO += 1
@@ -254,14 +212,14 @@ class ScrapiaShell(Cmd):
 
     def do_change_values(self, *args):
         """
-        menu to change values of certain variables        
+        menu to change values of certain variables
         """
         # For now work with `self._save_src` only
         new_value = input("change to true?\n(y/n) ")
         if new_value == "y":
-            self._save_src = True
+            self.saveSrc = True
         elif new_value := input("change to false?\n(y/n) ") == "y":
-            self._save_src = False
+            self.saveSrc = False
         else:
             print("Aborted!")
 
@@ -286,7 +244,7 @@ class ScrapiaShell(Cmd):
     def chapterNumberFromURL(
         self, url: str, return_as_is: bool = False, *args
     ) -> int | None:
-        """Setting `return_as_is` to True will return the number as a string, 
+        """Setting `return_as_is` to True will return the number as a string,
         this is used by the `end_cleanly` function."""
         if not self.is_ready:
             echo("Can run only after `setup` is invoked!")
@@ -323,10 +281,10 @@ class ScrapiaShell(Cmd):
 
         1) `increment_ch_no(commit=True)`
         2) `driver.quit()`
-        
+
         Simply quits the driver if `onlyDriverQuit` is set to `True`.
 
-        NOTE 
+        NOTE
         - `end_cleanly` does 'NOT' end the program execution
         - just closes the browser and commits to db
         """
@@ -373,31 +331,6 @@ class ScrapiaShell(Cmd):
             self.is_ready = True
             echo("Value has been set to True!")
 
-    # TODO Rename this son
-    # This will go into profiler class
-    def do_openAccordians(self, *args) -> None:
-        """The name makes it quite obvious...I'll come up with a better description at some later date."""
-
-        if not self.is_ready:
-            echo("Can run only after `setup` is invoked!")
-            return None
-        # The structure is quite simple, Dictionary{ tuple(lowerLimit, upperLimit): VolumeNumber }
-        # starts from '2' because in the initial setup the first panel is open by default, clicking on it, will close
-        # and hence, hide the chapters withing that panel.
-
-        self.driver.execute_script(
-            jshs.clickElementWithInnerTextS("button", "chapters")
-        )
-
-        clsTuple = ("grid", "grid-cols-1", "md:grid-cols-2", "w-full")
-        divList = self.driver.find_elements(
-            By.XPATH,
-            jshs.getXpathStrFrClsNames("div", *clsTuple),
-        )
-
-        hrefList = get_hrefList(divList)
-        # TODO ADD CODE HERE!!        
-
     def do_pr_pgsrc(self, *args):
         """Prints the page source to stdout"""
         print(self.driver.page_source)
@@ -409,7 +342,7 @@ class ScrapiaShell(Cmd):
         )
         if option == "y":
             self.do_end_cleanly()
-            self.driver = Firefox(executable_path=self.__EXECUTABLE_PATH_GECKO)
+            self.driver = self.setup_browser(self.GECKO_EXE_PATH, self.isHeadless)
         else:
             return None
 
@@ -438,7 +371,7 @@ class ScrapiaShell(Cmd):
         URL_LAST_PART: str = self.driver.current_url.rstrip("/").split("/")[-1]
 
         file_ext: str = ".txt"  # default value
-        if self._save_src:
+        if self.saveSrc:
             file_ext = ".html"
             story_content = self.driver.page_source
         else:
