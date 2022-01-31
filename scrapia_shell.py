@@ -112,9 +112,8 @@ class ScrapiaShell(Cmd):
         self.__DATABASE: str = cfg["SQL"]["DATABASE"]
 
         #  These will be used later on
-        self.CH_NO: int = 0
-        self.__LATEST_CH_NO = int(self.NOVEL_PAGE_INFO["LATEST_CH_NO"])
-        self.__NOVEL_PATH = self.NOVEL_PAGE_INFO["NOVEL_PATH"]
+        self.CH_NO: int = 0        
+        self.NOVEL_PATH = self.NOVEL_PAGE_INFO["NOVEL_PATH"]
         self.EMAIL = self.cfg["LOGIN"]["EMAIL"]
         self.PASSWORD = self.cfg["LOGIN"]["PASSWORD"]
 
@@ -219,7 +218,7 @@ class ScrapiaShell(Cmd):
                 sleep(5)
                 self.scrape_sleep_gotoNextPage()
 
-            while self.CH_NO <= self.__LATEST_CH_NO:
+            while self.CH_NO <= self.LATEST_CH_NO:
                 print("WHILE----------LOOP----------Initialized")
                 self.scrape_sleep_gotoNextPage()
                 if self.CH_NO % 5 == 0:
@@ -446,7 +445,7 @@ class ScrapiaShell(Cmd):
             # we don't need this if we're saving pg source by default
             # but this won't work either
             story_content = self.driver.find_element_by_id("chapter-content").text
-        with open(self.__NOVEL_PATH + URL_LAST_PART + file_ext, "w") as f:
+        with open(self.NOVEL_PATH + URL_LAST_PART + file_ext, "w") as f:
             f.write(story_content)
         self.increment_ch_no()
 
