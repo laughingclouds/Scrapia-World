@@ -13,7 +13,7 @@ class File_Directory_JSON_Worker:
         self.createDirectoriesReturnTrueIfExists()
         # <>_read.json & <>_toRead.json
         f_r, f_tR = self.checkIfFilesExist()
-        return (False, None)
+        
 
     def createDirectoriesReturnTrueIfExists(self) -> bool:
         """create `self.novelPath`/profile/
