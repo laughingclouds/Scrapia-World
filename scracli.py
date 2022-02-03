@@ -18,8 +18,9 @@ def cli(ctx):
 class OverrideDefault(ScrapiaShell):
     """Overrides `default` function of `ScrapiaShell`"""
 
-    # We will not define a __init__ because we want to use
-    # the base classes' __init__
+    def __init__(self, isHeadless, novelName, ctx: click.Context):
+        self.ctx = ctx
+        ScrapiaShell.__init__(self, isHeadless, novelName, ctx)
 
     def default(self, line: str):
         subcommand = cli.commands.get(line)
@@ -62,9 +63,7 @@ def count_words(novel_name: str) -> None:
     help="This will return the list of all the chapters.",
 )
 @click.argument("novel_name", type=str)
-def check(
-    novelName: str, latestChapter: bool = False, listAllChapters: bool = False
-):
+def check(novelName: str, latestChapter: bool = False, listAllChapters: bool = False):
     """Check wether any chapters are missing."""
 
     # This open the json file to return the path of the novel `novel_name`.
@@ -127,7 +126,7 @@ def greet(n, name):
 )
 @click.argument("novel_name")
 @click.pass_context
-def shell(ctx, headless: int, novel_name: str):
+def shell(ctx: click.Context, headless: int, novel_name: str):
     """Start a scraping session in a shell"""
     safe = "You are safe to go if you're in the terminal."
     warning = "Warning, invoking this within the shell will restart it."
