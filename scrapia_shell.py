@@ -8,23 +8,18 @@
     check out this tool https://pypi.org/project/webdriver-manager/
 """
 # scrapia_world = Scrape wuxia world...
-from pprint import pprint
 import threading
+from cmd import Cmd
 from sys import exit
 from traceback import print_exc
 from json import load
 from time import sleep  # for timeouts, cuz' you don't wanna get your IP banned...
 from platform import system as returnOSName
 
-from click import clear, echo
+from click import clear, echo, Context
 from selenium.common import exceptions
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
-from sw_utils import jsHelpScripts as jshs, clrScrn, colored
-from sw_utils.novelProfiler.db import getChapterNumberFrmDB, getConAndCur
+from sw_utils import clrScrn, colored
 from scrapia_shell_helper import ScrapiaShellHelper
 
 
@@ -34,7 +29,7 @@ if returnOSName() == "Windows":
     colorama.init()
 
 
-class ScrapiaShell(ScrapiaShellHelper):
+class ScrapiaShell(Cmd, ScrapiaShellHelper):
     """
     Shell for scraping
 
@@ -45,16 +40,17 @@ class ScrapiaShell(ScrapiaShellHelper):
 
     # ctx will be used in the class that overrides this one
 
-    def __init__(self, isHeadless: int, novel_name: str, ctx):
-        # Cmd.__init__(self)
-        ScrapiaShellHelper.__init__(self)
-
+    def __init__(self, isHeadless: int, novelName: str, ctx: Context):
+        msg = colored("Initialized ScrapiaShell", "green")
+        echo(msg)
+        Cmd.__init__(self)
+        self.ctx = ctx
         self.isHeadless = isHeadless
 
         self.SCRAPER_THREAD = threading.Thread(target=self.startScraping)
         # using sys.exit will now kill this thread.
         self.SCRAPER_THREAD.daemon = True
-        self.NOVEL = novel_name
+        self.NOVEL = novelName
         # To make sure certain functions run only after `setup` is invoked
         self.is_ready: bool = False
         self.saveSrc: bool = True  # If set, we'll save as html instead.
@@ -65,28 +61,36 @@ class ScrapiaShell(ScrapiaShellHelper):
 
             novel_page_dict: dict = load(novel_page_fobj)
             self.NOVEL_PAGE_INFO: dict[str, str] = novel_page_dict["novel_page_info"][
-                novel_name
+                novelName
             ]
 
         #  These will be used later on
         self.CH_NO: int = 0
-        self.NOVEL_PATH = self.NOVEL_PAGE_INFO["NOVEL_PATH"]
-
+        self.NOVEL_PATH = self.NOVEL_PAGE_INFO["NOVEL_PATH"].rstrip("/")
+        self.ACCORDIAN_TXT = self.NOVEL_PAGE_INFO["ACCORDIAN_TXT"]
+        # initialize here to avoid errors, as self.DATABASE is used after it
+        ScrapiaShellHelper.__init__(self, self.NOVEL_PATH, novelName, self.ACCORDIAN_TXT)
         # create a DBHelper class and make NovelProfiler inherit it
-        self.mydb, self.cursor = getConAndCur(self.DATABASE)
-        self.CH_NO = getChapterNumberFrmDB(
+        self.mydb, self.cursor = self.getConAndCur(self.DATABASE)
+        self.CH_NO = self.getChapterNumberFrmDB(
             self.mydb, self.cursor, self.TABLE, self.NOVEL
         )
 
         self.driver = self.setup_browser(self.GECKO_EXE_PATH, isHeadless)
 
-        self.prompt = colored(f"({self.NOVEL}) ", "red")
+        self.prompt = colored(f"({self.NOVEL}) ", "red")        
 
     intro = colored("Hi! Enter `help` for...well...help...", "green")
 
+    def do_make_profile(self, *args) -> None:
+        greenColorNovelName = colored(self.NOVEL, "green")
+        echo(f"Starting profile creation for {greenColorNovelName}")
+
+        self.makeNovelProfile(self.driver, self.NOVEL_PAGE_INFO["NOVEL_PAGE"])
+
     def do_nextPage(self, *args) -> None:
         """Finds and clicks the `Next` button"""
-        self.driver.execute_script(jshs.clickElementStartingWithStrS("span", "Next"))
+        self.driver.execute_script(self.clickElementStartingWithStrS("span", "Next"))
 
     def increment_ch_no(self, commitOnly: bool = False) -> None:
         """
@@ -104,60 +108,10 @@ class ScrapiaShell(ScrapiaShellHelper):
             return
         self.CH_NO += 1
 
-    def installAddon_cleanTabs_getLoginWindow(self) -> None:
-        """
-        1) Install UblockOrigin
-        2) If any "welcome" windows open, close them
-        3) Click on login button
-        """
-
-        self.driver.install_addon(
-            f"{self.cfg['EXTENSIONS']['FOX_EXT_BASE_PATH']}/{self.cfg['EXTENSIONS']['UBO']}"
-        )
-
-        self.driver.get(self.cfg["LOGIN"]["LOGIN_FROM"])
-        WebDriverWait(self.driver, 7).until(
-            EC.presence_of_all_elements_located((By.TAG_NAME, "main"))
-        )
-        # wait for the page to load
-
-        # Points to ww login-page
-        MAIN_HANDLE: str = self.driver.current_window_handle
-        for window_handle in self.driver.window_handles:
-            if window_handle != MAIN_HANDLE:
-                self.driver.switch_to.window(window_handle)
-                # after closing all irrelevant tabs driver will focus back to the main one
-                self.driver.close()
-        # Puts focus back on ww login-page
-        self.driver.switch_to.window(MAIN_HANDLE)
-        # Use this stuff to setup the login window (You don't want any junk in some new tab)
-        sleep(2)
-        # click the first button on the page, it will make login button visible
-        js = jshs.clickFirstElementFromElementList(
-            "button"
-        ) + jshs.clickElementWithInnerTextS("button", "log in")
-        self.driver.execute_script(js)
-
     def scrape_sleep_gotoNextPage(self) -> None:
         self.do_scrape()
         sleep(100)
         self.do_nextPage()
-
-    # For god's sake, don't push the json to github...
-    # For god's sake, don't push the json to github...
-    def loginThenGetNovelPage(self) -> None:
-        """
-        1) Login using credentials in `config.cfg`
-        2) get novel page
-        """
-        inputElement = self.driver.find_element_by_id("Username")
-        inputElement.send_keys(self.EMAIL)
-        inputElement = self.driver.find_element_by_id("Password")
-        inputElement.send_keys(self.PASSWORD)
-        inputElement.send_keys(Keys.ENTER)
-        sleep(3)
-        # goto novel-page of whatever novel has been choosen
-        self.driver.get(self.NOVEL_PAGE_INFO["NOVEL_PAGE"])
 
     def startScraping(self) -> None:
         """
@@ -168,12 +122,8 @@ class ScrapiaShell(ScrapiaShellHelper):
             if not self.is_ready:
                 self.do_setup()
 
-            if self.chapterNumberFromURL(self.__INITIAL_SCRAPE) == self.CH_NO:
-                print(f"FOUND----------CHAPTER----------{self.CH_NO}")
-                self.driver.get(self.__INITIAL_SCRAPE)
-                sleep(5)
-                self.scrape_sleep_gotoNextPage()
-
+            # while toRead
+            # tRead: dict[int, dict[str, int]]
             while self.CH_NO <= self.LATEST_CH_NO:
                 print("WHILE----------LOOP----------Initialized")
                 self.scrape_sleep_gotoNextPage()
@@ -234,40 +184,10 @@ class ScrapiaShell(ScrapiaShellHelper):
 
     def do_current_url(self, *args) -> None:
         try:
-            echo(f"We are in\n{self.driver.current_url}")
+            echo(f"We are in: \t{self.driver.current_url}")
         except Exception as e:
             echo(e + "\n\n" + "Try invoking `setup` first")
             return None
-
-    def chapterNumberFromURL(
-        self, url: str, return_as_is: bool = False, *args
-    ) -> int | None:
-        """Setting `return_as_is` to True will return the number as a string,
-        this is used by the `end_cleanly` function."""
-        if not self.is_ready:
-            echo("Can run only after `setup` is invoked!")
-            return
-
-        # This returns only the relevant part (the part with the chapter no)
-        url = list(
-            reversed(
-                url.removeprefix("https://www.wuxiaworld.com/novel/")
-                .rstrip("/")
-                .replace("-", " ")
-                .split(" ")
-            )
-        )
-        number_as_str: str = ""
-        for element in url:
-            if element.isdecimal():
-                number_as_str = element
-                break
-        if not number_as_str:
-            return
-        if return_as_is:
-            return number_as_str
-        else:
-            return int(number_as_str)
 
     def do_get(self, *args):
         """Prompts for a url and invokes `self.__driver.get(<url>)`"""
@@ -352,9 +272,7 @@ class ScrapiaShell(ScrapiaShellHelper):
         if option == "y":
             novel_name: str = input(f"{self.prompt}Enter novel name: ").strip()
             self.do_end_cleanly()
-            self.__init__(novel_name)
-        else:
-            return None
+            self.__init__(self.isHeadless, novel_name, self.ctx)
 
     def do_scrape(self, *args) -> None:
         """`scrape` does the following:\n
@@ -376,7 +294,9 @@ class ScrapiaShell(ScrapiaShellHelper):
             # we don't need this if we're saving pg source by default
             # but this won't work either
             story_content = self.driver.find_element_by_id("chapter-content").text
-        with open(self.NOVEL_PATH + URL_LAST_PART + file_ext, "w") as f:
+
+        # TODO save as f"Chapter-{customIndex}"
+        with open(f"{self.NOVEL_PATH}/{URL_LAST_PART}/{file_ext}", "w") as f:
             f.write(story_content)
         self.increment_ch_no()
 
@@ -394,15 +314,19 @@ class ScrapiaShell(ScrapiaShellHelper):
         # driver.get that link and start_scraping from there
         try:
             self.is_ready = True
-            self.installAddon_cleanTabs_getLoginWindow()
-            sleep(5)
+            echo("Installing addon...")
+            self.installAddon_cleanTabs_getLoginWindow(self.driver)
+            echo("Done. Sleeping for 2 seconds.")
+            sleep(2)
 
-            self.loginThenGetNovelPage()
+            echo("logging in to website...")
+            self.loginToWebsite(self.driver)
+            echo("Done. Sleeping for 2 seconds.")
             sleep(2)
 
             # TODO put code to directly goto chapter, using indexed link
 
-            self.driver.implicitly_wait(5)
+            # self.driver.implicitly_wait(5)    # TODO uncomment later
             # This is all it does.
             # It's basically creating (or `setting up`) a scenario that makes scraping through the click method possible
         except exceptions.NoSuchElementException as e:
