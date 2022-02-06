@@ -10,16 +10,43 @@ from .db import DBHelper
 from .file_directory_worker import File_Directory_JSON_Worker
 
 
+def get_hrefList(divList: list[WebElement]) -> list[str]:
+    """
+    1) Get the links to the chapters
+    2) Return in ascending order
+    """
+    hrefList = []
+    for divElement in divList:
+        aList: list[WebElement] = divElement.find_elements(By.TAG_NAME, "a")
+        hrefList.extend([a.get_attribute("href") for a in aList])
+    return list(reversed(hrefList))
+
+
+def convert_hrefList2Dict(hrefList: list[str]):
+    """
+    Convert inputted list to mapping of {custom_index: (link, custom_index)}
+
+    NOTE: We assume `hrefList` starts from chapter-0
+    """
+    hrefDict: dict[int, tuple[str, int]] = {}
+    for i, link in enumerate(hrefList):
+        hrefDict[i] = (link, i)
+
+    return hrefDict
+
+
 class NovelProfiler(File_Directory_JSON_Worker, DBHelper):
     """
     Helper class to deal with "novel profiling" and more.
     """
 
-    def __init__(self, novelPath: str, novelName: str, msg: tuple[str], accordianText: str) -> None:
+    def __init__(
+        self, novelPath: str, novelName: str, msg: tuple[str], accordianText: str
+    ) -> None:
         echo(msg[1])
         File_Directory_JSON_Worker.__init__(self, novelPath, novelName, msg)
         DBHelper.__init__(self, msg)
-        
+
         self.accordianText = accordianText
 
     def makeNovelProfile(self, driver: WebDriver, novelPageUrl: str):
@@ -33,9 +60,7 @@ class NovelProfiler(File_Directory_JSON_Worker, DBHelper):
         keys_f_r = tuple(f_r[1])
         keys_f_tR = tuple(f_tR[1])
 
-        hrefDict = self.convert_hrefList2Dict(
-            self.harvestChapterLinks(driver, novelPageUrl)
-        )
+        hrefDict = convert_hrefList2Dict(self.harvestChapterLinks(driver, novelPageUrl))
         print(keys_f_r, keys_f_tR, sep="\n")
         f_tRDict = {}
 
@@ -83,28 +108,4 @@ class NovelProfiler(File_Directory_JSON_Worker, DBHelper):
             self.getXpathStrFrClsNames("div", *clsTuple),
         )
 
-        # hrefList = self.get_hrefList(divList)
-        return self.get_hrefList(divList)
-
-    def get_hrefList(self, divList: list[WebElement]) -> list[str]:
-        """
-        1) Get the links to the chapters
-        2) Return in ascending order
-        """
-        hrefList = []
-        for divElement in divList:
-            aList: list[WebElement] = divElement.find_elements(By.TAG_NAME, "a")
-            hrefList.extend([a.get_attribute("href") for a in aList])
-        return list(reversed(hrefList))
-
-    def convert_hrefList2Dict(self, hrefList: list[str]):
-        """
-        Convert inputted list to mapping of {custom_index: (link, custom_index)}
-
-        NOTE: We assume `hrefList` starts from chapter-0
-        """
-        hrefDict: dict[int, tuple[str, int]] = {}
-        for i, link in enumerate(hrefList):
-            hrefDict[i] = (link, i)
-
-        return hrefDict
+        return get_hrefList(divList)
