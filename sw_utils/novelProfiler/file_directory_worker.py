@@ -6,7 +6,7 @@ from click import echo
 
 
 def loadSafely(fp: FileIO) -> dict:
-    try:    
+    try:
         return load(fp)
     except JSONDecodeError:
         # file is probably completely empty
@@ -32,9 +32,6 @@ class File_Directory_JSON_Worker:
         self.novelPrfPath = f"{novelPath}/profile"
 
         self.retFilePath = lambda s: f"{self.novelPrfPath}/{novelName}_{s}.json"
-
-        # <>_read.json & <>_toRead.json
-        # return self.readFiles(*self.checkIfFilesExist())
 
     def createDirectoriesReturnTrueIfExists(self) -> bool:
         """create `self.novelPath`/profile/
@@ -77,7 +74,7 @@ class File_Directory_JSON_Worker:
         for returned tuple
         tuple[0] is f_r
         tuple[1] is f_tR
-        """        
+        """
         # This actually get's a zip object
         f_r, f_tR = f_s
 
@@ -86,11 +83,31 @@ class File_Directory_JSON_Worker:
             (f_tR[0], loadSafely(f_tR[2]), f_tR[2]),
         )
 
+    def readJsonsReturnDict(self):
+        """
+        1) Read the jsons
+        2) Raise error if file not found
+        3) (TODO) Raise error if both files are empty. Make custom error for it
+        4) REFER https://docs.python.org/3/tutorial/errors.html#user-defined-exceptions
+        5) (NOTE) index0=<>_read.json       index1=<>_toRead.json
+        """
+        try:
+            # TODO Later add code to check if they're empty or not?
+            # code can return a custom error
+            fileNameTuple = (self.retFilePath("read"), self.retFilePath("toRead"))
+            dataTup: tuple[dict[str, tuple[str, int]], ...] = (
+                load(open(fileNameTuple[0], "r")),
+                load(open(fileNameTuple[1], "r")),
+            )
+            return dataTup
+        except FileNotFoundError:
+            raise
+
     def closeFileObjs(self, *fileObjsPlusDicts: tuple[FileIO, dict]) -> None:
-        """Dump the data before closing file objects"""        
+        """Dump the data before closing file objects"""
         for fileObjPlusDict in fileObjsPlusDicts:
             fileObj, d = fileObjPlusDict
             if fileObj:
                 fileName = fileObj.name
                 fileObj.close()
-                dump(d, open(fileName, "w"), indent=2, sort_keys=True)
+                dump(d, open(fileName, "w"), indent=2)

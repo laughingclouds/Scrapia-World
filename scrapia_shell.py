@@ -12,7 +12,7 @@ import threading
 from cmd import Cmd
 from sys import exit
 from traceback import print_exc
-from json import load
+from json import dump, load
 from time import sleep  # for timeouts, cuz' you don't wanna get your IP banned...
 from platform import system as returnOSName
 
@@ -69,7 +69,9 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
         self.NOVEL_PATH = self.NOVEL_PAGE_INFO["NOVEL_PATH"].rstrip("/")
         self.ACCORDIAN_TXT = self.NOVEL_PAGE_INFO["ACCORDIAN_TXT"]
         # initialize here to avoid errors, as self.DATABASE is used after it
-        ScrapiaShellHelper.__init__(self, self.NOVEL_PATH, novelName, self.ACCORDIAN_TXT)
+        ScrapiaShellHelper.__init__(
+            self, self.NOVEL_PATH, novelName, self.ACCORDIAN_TXT
+        )
         # create a DBHelper class and make NovelProfiler inherit it
         self.mydb, self.cursor = self.getConAndCur(self.DATABASE)
         self.CH_NO = self.getChapterNumberFrmDB(
@@ -78,7 +80,7 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
 
         self.driver = self.setup_browser(self.GECKO_EXE_PATH, isHeadless)
 
-        self.prompt = colored(f"({self.NOVEL}) ", "red")        
+        self.prompt = colored(f"({self.NOVEL}) ", "red")
 
     intro = colored("Hi! Enter `help` for...well...help...", "green")
 
@@ -101,8 +103,9 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
         """
 
         if commitOnly:
-            with self.mydb:
-                self.cursor.execute(
+            con, cur = self.getConAndCur(self.DATABASE)
+            with con:
+                cur.execute(
                     f"UPDATE {self.TABLE} SET {self.NOVEL}={self.CH_NO};"
                 )
             return
@@ -110,7 +113,7 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
 
     def scrape_sleep_gotoNextPage(self) -> None:
         self.do_scrape()
-        sleep(100)
+        sleep(int(self.cfg['PROJECT']['SLEEP_TIME_AFTER_SCRAPE']))
         self.do_nextPage()
 
     def startScraping(self) -> None:
@@ -122,27 +125,34 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
             if not self.is_ready:
                 self.do_setup()
 
-            # while toRead
-            # tRead: dict[int, dict[str, int]]
-            while self.CH_NO <= self.LATEST_CH_NO:
-                print("WHILE----------LOOP----------Initialized")
+            read_dict, toRead_dict = self.readJsonsReturnDict()
+            indexList = list(toRead_dict.keys())
+
+            scrapeCount = 0
+            print("WHILE----------LOOP----------Initialized")
+            while toRead_dict:
+                scrapeCount += 1
                 self.scrape_sleep_gotoNextPage()
-                if self.CH_NO % 5 == 0:
+                popFirstElementUpdateOtherDict(indexList, toRead_dict, read_dict)
+
+                if scrapeCount % 5 == 0:
                     self.increment_ch_no(commitOnly=True)
-                # optional, you could add a line to stop execution
-                # when a certain `CH_NO` has been scraped.
+                    saveNovelProfile(self, toRead_dict, read_dict)
+                    scrapeCount = 0                
             print("All present chapters scraped...\nEnding...")
             self.do_end_cleanly()
 
         except KeyboardInterrupt:
             self.do_end_cleanly()
+            saveNovelProfile(self, toRead_dict, read_dict)
             print("KEYBOARD----------INTERRUPT----------INVOKED")
             return
         except Exception:
             print("----------ERROR----------")
             print_exc()
             self.do_end_cleanly()
-            return
+            saveNovelProfile(self, toRead_dict, read_dict)
+            return            
 
     def do_ch_no(self, *args) -> None:
         """Perform operations on `self.CH_NO`."""
@@ -157,19 +167,6 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
                 return None
         else:
             print("Aborting!")
-
-    def do_change_values(self, *args):
-        """
-        menu to change values of certain variables
-        """
-        # For now work with `self._save_src` only
-        new_value = input("change to true?\n(y/n) ")
-        if new_value == "y":
-            self.saveSrc = True
-        elif new_value := input("change to false?\n(y/n) ") == "y":
-            self.saveSrc = False
-        else:
-            print("Aborted!")
 
     def do_cls(self, *args) -> None:
         """Clear screen"""
@@ -286,17 +283,12 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
 
         URL_LAST_PART: str = self.driver.current_url.rstrip("/").split("/")[-1]
 
-        file_ext: str = ".txt"  # default value
-        if self.saveSrc:
-            file_ext = ".html"
-            story_content = self.driver.page_source
-        else:
-            # we don't need this if we're saving pg source by default
-            # but this won't work either
-            story_content = self.driver.find_element_by_id("chapter-content").text
+        # file_ext: str = "txt"  # default value
+        file_ext = "html"
+        story_content = self.driver.page_source
 
         # TODO save as f"Chapter-{customIndex}"
-        with open(f"{self.NOVEL_PATH}/{URL_LAST_PART}/{file_ext}", "w") as f:
+        with open(f"{self.NOVEL_PATH}/{URL_LAST_PART}.{file_ext}", "w") as f:
             f.write(story_content)
         self.increment_ch_no()
 
@@ -325,8 +317,9 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
             sleep(2)
 
             # TODO put code to directly goto chapter, using indexed link
-
-            # self.driver.implicitly_wait(5)    # TODO uncomment later
+            toRead_dict = self.readJsonsReturnDict()[1]
+            self.driver.get(toRead_dict[tuple(toRead_dict.keys())[0]][0])
+            self.driver.implicitly_wait(5)
             # This is all it does.
             # It's basically creating (or `setting up`) a scenario that makes scraping through the click method possible
         except exceptions.NoSuchElementException as e:
@@ -343,9 +336,6 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
             )
             return
 
-    # –
-    # -
-
     def do_start_scraping(self, *args):
         """This will run the `self.__start_scraping` helper function in a thread. This particular function also
         deals with any function calls that might try to `start` the same thread again."""
@@ -354,3 +344,28 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
         except RuntimeError as e:
             print(e, "The function is probably already running!", sep="\n")
             return None
+
+
+def saveNovelProfile(shellObj: ScrapiaShell, toRead_dict, read_dict):
+    """
+    1) Open json files corresponding to the inputted dict objects
+    2) dump data in them
+    """
+    with open(shellObj.retFilePath("toRead"), "w") as save_toReadFobj, open(
+        shellObj.retFilePath("read"), "w"
+    ) as save_readFobj:
+        dump(toRead_dict, save_toReadFobj, indent=2)
+        dump(read_dict, save_readFobj, indent=2)
+
+
+def popFirstElementUpdateOtherDict(keyList: list, *ds: dict | None):
+    """
+    1) pop first element from d1
+    2) update d2 with popped element
+    3) pop first element from keyList
+    """
+    d1, d2 = ds
+    if not d2:
+        d1.pop(keyList.pop(0))
+    else:
+        d2.update({keyList[0]: d1.pop(keyList.pop(0))})

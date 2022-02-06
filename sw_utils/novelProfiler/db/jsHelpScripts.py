@@ -36,7 +36,7 @@ class JSHelpScripts:
     def clickFirstElementFromElementList(self, tagName: str) -> str:
         return f"""document.getElementsByTagName("{tagName}")[0].click();"""
 
-    def clickElementStartingWithStrS(tagName: str, startingTxt: str) -> str:
+    def clickElementStartingWithStrS(self, tagName: str, startingTxt: str) -> str:
         return "".join(
             (
                 "let elementList=document",

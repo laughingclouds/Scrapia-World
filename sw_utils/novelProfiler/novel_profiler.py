@@ -28,7 +28,7 @@ def convert_hrefList2Dict(hrefList: list[str]):
 
     NOTE: We assume `hrefList` starts from chapter-0
     """
-    hrefDict: dict[int, tuple[str, int]] = {}
+    hrefDict: dict[str, tuple[str, int]] = {}
     for i, link in enumerate(hrefList):
         hrefDict[i] = (link, i)
 
