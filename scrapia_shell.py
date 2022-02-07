@@ -105,16 +105,20 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
         if commitOnly:
             con, cur = self.getConAndCur(self.DATABASE)
             with con:
-                cur.execute(
-                    f"UPDATE {self.TABLE} SET {self.NOVEL}={self.CH_NO};"
-                )
+                cur.execute(f"UPDATE {self.TABLE} SET {self.NOVEL}={self.CH_NO};")
             return
         self.CH_NO += 1
 
-    def scrape_sleep_gotoNextPage(self) -> None:
+    def scrape_gotoNextPage_sleep(self) -> None:
+        """
+        (NOTE) Order matters here. After successfully scraping a page, it will go
+        to the next page and then sleep.
+        
+        Giving enough time to the content to load.
+        """
         self.do_scrape()
-        sleep(int(self.cfg['PROJECT']['SLEEP_TIME_AFTER_SCRAPE']))
         self.do_nextPage()
+        sleep(int(self.cfg["PROJECT"]["SLEEP_TIME_AFTER_SCRAPE"]))
 
     def startScraping(self) -> None:
         """
@@ -132,13 +136,16 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
             print("WHILE----------LOOP----------Initialized")
             while toRead_dict:
                 scrapeCount += 1
-                self.scrape_sleep_gotoNextPage()
-                popFirstElementUpdateOtherDict(indexList, toRead_dict, read_dict)
+                self.scrape_gotoNextPage_sleep()
+                # updating the values
+                indexList, toRead_dict, read_dict = popFirstElementUpdateOtherDict(
+                    indexList, toRead_dict, read_dict
+                )
 
                 if scrapeCount % 5 == 0:
                     self.increment_ch_no(commitOnly=True)
                     saveNovelProfile(self, toRead_dict, read_dict)
-                    scrapeCount = 0                
+                    scrapeCount = 0
             print("All present chapters scraped...\nEnding...")
             self.do_end_cleanly()
 
@@ -152,7 +159,7 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
             print_exc()
             self.do_end_cleanly()
             saveNovelProfile(self, toRead_dict, read_dict)
-            return            
+            return
 
     def do_ch_no(self, *args) -> None:
         """Perform operations on `self.CH_NO`."""
@@ -363,9 +370,11 @@ def popFirstElementUpdateOtherDict(keyList: list, *ds: dict | None):
     1) pop first element from d1
     2) update d2 with popped element
     3) pop first element from keyList
+    4) return elements in the order they were inputted
     """
     d1, d2 = ds
     if not d2:
         d1.pop(keyList.pop(0))
     else:
         d2.update({keyList[0]: d1.pop(keyList.pop(0))})
+    return keyList, d1, d2
