@@ -135,20 +135,21 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
             scrapeCount = 0
             print("WHILE----------LOOP----------Initialized")
             while toRead_dict:
-                scrapeCount += 1
                 self.scrape_gotoNextPage_sleep()
                 # updating the values
                 indexList, toRead_dict, read_dict = popFirstElementUpdateOtherDict(
                     indexList, toRead_dict, read_dict
                 )
 
+                scrapeCount += 1
                 if scrapeCount % 5 == 0:
                     self.increment_ch_no(commitOnly=True)
                     saveNovelProfile(self, toRead_dict, read_dict)
                     scrapeCount = 0
             print("All present chapters scraped...\nEnding...")
             self.do_end_cleanly()
-
+            saveNovelProfile(self, toRead_dict, read_dict)
+            
         except KeyboardInterrupt:
             self.do_end_cleanly()
             saveNovelProfile(self, toRead_dict, read_dict)
