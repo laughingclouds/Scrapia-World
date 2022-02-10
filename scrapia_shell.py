@@ -151,15 +151,16 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
             saveNovelProfile(self, toRead_dict, read_dict)
             
         except KeyboardInterrupt:
-            self.do_end_cleanly()
+            # save before ending
             saveNovelProfile(self, toRead_dict, read_dict)
+            self.do_end_cleanly()
             print("KEYBOARD----------INTERRUPT----------INVOKED")
             return
         except Exception:
+            saveNovelProfile(self, toRead_dict, read_dict)
             print("----------ERROR----------")
             print_exc()
             self.do_end_cleanly()
-            saveNovelProfile(self, toRead_dict, read_dict)
             return
 
     def do_ch_no(self, *args) -> None:
