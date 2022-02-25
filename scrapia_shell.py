@@ -41,6 +41,8 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
     # ctx will be used in the class that overrides this one
 
     def __init__(self, isHeadless: int, novelName: str, ctx: Context):
+        self.toRead_dict: dict = {}
+        self.read_dict: dict = {}
         msg = colored("Initialized ScrapiaShell", "green")
         echo(msg)
         Cmd.__init__(self)
@@ -129,35 +131,35 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
             if not self.is_ready:
                 self.do_setup()
 
-            read_dict, toRead_dict = self.readJsonsReturnDict()
-            indexList = list(toRead_dict.keys())
+            self.read_dict, self.toRead_dict = self.readJsonsReturnDict()
+            indexList = list(self.toRead_dict.keys())
 
             scrapeCount = 0
             print("WHILE----------LOOP----------Initialized")
-            while toRead_dict:
+            while self.toRead_dict:
                 self.scrape_gotoNextPage_sleep()
                 # updating the values
-                indexList, toRead_dict, read_dict = popFirstElementUpdateOtherDict(
-                    indexList, toRead_dict, read_dict
+                indexList, self.toRead_dict, self.read_dict = popFirstElementUpdateOtherDict(
+                    indexList, self.toRead_dict, self.read_dict
                 )
 
                 scrapeCount += 1
                 if scrapeCount % 5 == 0:
                     self.increment_ch_no(commitOnly=True)
-                    saveNovelProfile(self, toRead_dict, read_dict)
+                    saveNovelProfile(self, self.toRead_dict, self.read_dict)
                     scrapeCount = 0
             print("All present chapters scraped...\nEnding...")
             self.do_end_cleanly()
-            saveNovelProfile(self, toRead_dict, read_dict)
+            saveNovelProfile(self, self.toRead_dict, self.read_dict)
             
         except KeyboardInterrupt:
             # save before ending
-            saveNovelProfile(self, toRead_dict, read_dict)
-            self.do_end_cleanly()
+            saveNovelProfile(self, self.toRead_dict, self.read_dict)
             print("KEYBOARD----------INTERRUPT----------INVOKED")
+            self.do_end_cleanly()
             return
         except Exception:
-            saveNovelProfile(self, toRead_dict, read_dict)
+            saveNovelProfile(self, self.toRead_dict, self.read_dict)
             print("----------ERROR----------")
             print_exc()
             self.do_end_cleanly()
@@ -233,6 +235,8 @@ class ScrapiaShell(Cmd, ScrapiaShellHelper):
     def do_exit(self, *args) -> bool:
         """Exit the interactive shell"""
         try:
+            if self.read_dict or self.toRead_dict:
+                saveNovelProfile(self, self.toRead_dict, self.read_dict)
             if self.is_ready:
                 self.CH_NO = int(
                     self.chapterNumberFromURL(
