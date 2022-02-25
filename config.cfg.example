@@ -1,5 +1,10 @@
 # For all configurations
 # values should not be enclosed within quotes
+[PROJECT]
+ROOT=path
+# 100 is safe
+# SLEEP_TIME_AFTER_SCRAPE=100
+SLEEP_TIME_AFTER_SCRAPE=100
 
 [LOGIN]
 EMAIL=email
@@ -17,3 +22,9 @@ CHROME_EXE_PATH=path
 
 [EXTENSIONS]
 FOX_EXT_BASE_PATH=path
+PRIVACY_BADGER=file_name
+GHOSTERY=file_name
+UBO=file_name
+
+[NOVEL]
+BASE_DIR_PATH=path
